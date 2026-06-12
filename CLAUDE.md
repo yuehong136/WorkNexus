@@ -188,6 +188,7 @@ MCP 规范铁律：
 - 列表接口 `data` 内含 `items` + `total` + `page` + `page_size`。
 - 异常体系：业务异常统一抛 `BizError(code, message)`，由全局 exception handler 转 Envelope；未知异常返回固定文案 `"internal error"` + 日志记录完整堆栈，**禁止把 `str(exc)` 直接返回给客户端**。
 - HTTP 状态码：鉴权失败 401、权限不足 403、其余业务错误一律 200 + 非 0 code。
+- 统一 `request_id`：中间件为每个请求注入，结构化日志全程携带，错误响应返回该 id 以便追踪。
 
 ### 4.4 认证与权限（v0.1 决策，详见 docs/roadmap.md D2/D3）
 
@@ -329,19 +330,21 @@ Tailwind 4 CSS-first，单一真相源在 `styles/globals.css`：
 
 ## 6. 数据模型基线（v0.1 核心对象）
 
-核心模型（详见各模块 `docs/modules/<module>.md`）：`User`、`Project`、`ProjectMember`、`WorkItem`、`WorkItemComment`、`WorkItemActivity`、`WorkItemRelation`、`IntakeRequest`、`Conversation`、`Message`、`AgentAction`、`Skill`、`SkillTool`、`SkillInvocation`、`AuditLog`。
+核心模型（v0.1 全量表清单见 `docs/reference/v0.1-feature-spec.md` 第 10 节，细节见各模块 `docs/modules/<module>.md`）：`Tenant`、`User`、`Session`、`InviteToken`、`ProjectMember`、`RoleBinding`、`AIAgent`、`McpDelegationToken`、`Project`、`WorkItem`、`WorkItemComment`、`WorkItemActivity`、`WorkItemRelation`、`IntakeRequest`、`Conversation`、`Message`、`AgentAction`、`SkillInvocation`、`AuditLog`。
 
-关键枚举（前后端共享语义，由 contracts 生成保证一致）：
+关键枚举（前后端共享语义，由 contracts 生成保证一致；**枚举常量先于业务代码定死**）：
 
 - `WorkItem.type`: `task | requirement | bug | risk | decision | approval | incident | feedback`
 - `WorkItem.status`: `backlog | todo | in_progress | review | done | cancelled`
 - `WorkItem.priority`: `low | medium | high | urgent`
 - `WorkItem.source`: `manual | ai_chat | intake | api | mcp`
+- `WorkItemRelation.type`: `parent_child | blocks | blocked_by | duplicates | relates_to | created_from_message | created_from_intake`
 - `IntakeRequest.status`: `new | triaging | accepted | rejected | duplicate | snoozed | converted`
-- `AgentAction.status`: `pending | approved | rejected | executed | failed`
-- 风险等级（AgentAction / SkillInvocation / MCP tool tag 共用）: `read | low_write | high_write`
+- `AgentAction.status`: `pending | approved | rejected | executed | failed | expired`
+- 风险等级（AgentAction / SkillInvocation / MCP tool tag / AuditLog 共用）: `read | low_write | high_write`
+- `actor_type` / 评论来源: `user | ai_agent | system`
 
-所有表预留 `tenant_id` 字段（v0.1 不做多租户 UI）。
+通用字段约定：所有核心业务表必有 `id / tenant_id / created_at / updated_at`（EntityMixin）；**重要业务表另加 `created_by / updated_by`**，软删除 `deleted_at` 按需。v0.1 不做多租户 UI，tenant_id 仅预留。
 
 ---
 
