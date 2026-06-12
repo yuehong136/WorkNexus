@@ -1,6 +1,6 @@
 # 模块：identity（身份与权限）
 
-> 状态：开发中
+> 状态：已上线
 > 负责人：dxl
 > 关联 feature（前端）：`apps/web/src/features/auth`、`apps/web/src/features/settings`（members 页）、`apps/web/src/lib/auth`
 > 关联 module（后端）：`apps/server/src/worknexus/modules/identity`（+ `modules/audit` 起步、`modules/projects` 仅模型）、`core/access.py`
