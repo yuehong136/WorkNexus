@@ -1,0 +1,54 @@
+from enum import StrEnum
+from typing import Any
+
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from worknexus.core.deps import Actor
+from worknexus.core.request_id import get_request_id
+from worknexus.modules.audit.models import AuditLog
+
+
+class AuditAction(StrEnum):
+    SETUP_COMPLETE = "setup.complete"
+    AUTH_LOGIN = "auth.login"
+    AUTH_LOGOUT = "auth.logout"
+    INVITE_CREATE = "invite.create"
+    INVITE_REVOKE = "invite.revoke"
+    INVITE_ACCEPT = "invite.accept"
+    ROLE_BINDING_CREATE = "role_binding.create"
+    ROLE_BINDING_DELETE = "role_binding.delete"
+    PROJECT_MEMBER_ADD = "project.member.add"
+
+
+async def record(
+    db: AsyncSession,
+    actor: Actor,
+    *,
+    action: str,
+    resource_type: str,
+    resource_id: str | None = None,
+    before: dict[str, Any] | None = None,
+    after: dict[str, Any] | None = None,
+    project_id: str | None = None,
+    detail: dict[str, Any] | None = None,
+    ip_address: str | None = None,
+) -> AuditLog:
+    """Add an audit row to the caller's session. Never commits — the audit row
+    must live or die with the business write in the same transaction."""
+    log = AuditLog(
+        tenant_id=actor.tenant_id,
+        actor_type=actor.type,
+        actor_id=actor.id,
+        action=action,
+        resource_type=resource_type,
+        resource_id=resource_id,
+        project_id=project_id,
+        before=before,
+        after=after,
+        detail=detail,
+        request_id=get_request_id(),
+        ip_address=ip_address,
+    )
+    db.add(log)
+    await db.flush()
+    return log

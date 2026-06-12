@@ -8,6 +8,7 @@ from fastmcp.utilities.lifespan import combine_lifespans
 from worknexus.api import api_router
 from worknexus.config import get_settings
 from worknexus.core.errors import register_exception_handlers
+from worknexus.core.request_id import RequestIdMiddleware
 from worknexus.db import dispose_engine
 from worknexus.mcp import mcp
 
@@ -26,6 +27,7 @@ app = FastAPI(
     lifespan=combine_lifespans(app_lifespan, mcp_app.lifespan),
 )
 
+app.add_middleware(RequestIdMiddleware)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=get_settings().cors_origins,

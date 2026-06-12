@@ -5,17 +5,27 @@
  * OpenAPI spec version: 0.1.0
  */
 import {
+  useMutation,
   useQuery
 } from '@tanstack/react-query';
 import type {
+  MutationFunction,
   QueryFunction,
   QueryKey,
+  UseMutationOptions,
+  UseMutationResult,
   UseQueryOptions,
   UseQueryResult
 } from '@tanstack/react-query';
 
 import type {
-  GetHealth200
+  EnvelopeCurrentUserContext,
+  EnvelopeNoneType,
+  EnvelopeSetupStatusOut,
+  GetHealth200,
+  HTTPValidationError,
+  LoginIn,
+  SetupIn
 } from './model';
 
 import { apiMutator } from './mutator';
@@ -107,3 +117,359 @@ export function useGetHealth<TData = Awaited<ReturnType<typeof getHealth>>, TErr
 
   return query;
 }
+
+
+
+
+/**
+ * @summary Get Setup Status
+ */
+export type getSetupStatusResponse200 = {
+  data: EnvelopeSetupStatusOut
+  status: 200
+}
+    
+export type getSetupStatusResponseSuccess = (getSetupStatusResponse200) & {
+  headers: Headers;
+};
+;
+
+export type getSetupStatusResponse = (getSetupStatusResponseSuccess)
+
+export const getGetSetupStatusUrl = () => {
+
+
+  
+
+  return `/api/v1/setup/status`
+}
+
+export const getSetupStatus = async ( options?: RequestInit): Promise<getSetupStatusResponse> => {
+  
+  return apiMutator<getSetupStatusResponse>(getGetSetupStatusUrl(),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+
+
+export const getGetSetupStatusQueryKey = () => {
+    return [
+    `/api/v1/setup/status`
+    ] as const;
+    }
+
+    
+export const getGetSetupStatusQueryOptions = <TData = Awaited<ReturnType<typeof getSetupStatus>>, TError = unknown>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getSetupStatus>>, TError, TData>, request?: SecondParameter<typeof apiMutator>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetSetupStatusQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getSetupStatus>>> = ({ signal }) => getSetupStatus({ signal, ...requestOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getSetupStatus>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetSetupStatusQueryResult = NonNullable<Awaited<ReturnType<typeof getSetupStatus>>>
+export type GetSetupStatusQueryError = unknown
+
+
+/**
+ * @summary Get Setup Status
+ */
+
+export function useGetSetupStatus<TData = Awaited<ReturnType<typeof getSetupStatus>>, TError = unknown>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getSetupStatus>>, TError, TData>, request?: SecondParameter<typeof apiMutator>}
+  
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetSetupStatusQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * @summary Run Setup
+ */
+export type runSetupResponse200 = {
+  data: EnvelopeCurrentUserContext
+  status: 200
+}
+
+export type runSetupResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+    
+export type runSetupResponseSuccess = (runSetupResponse200) & {
+  headers: Headers;
+};
+export type runSetupResponseError = (runSetupResponse422) & {
+  headers: Headers;
+};
+
+export type runSetupResponse = (runSetupResponseSuccess | runSetupResponseError)
+
+export const getRunSetupUrl = () => {
+
+
+  
+
+  return `/api/v1/setup`
+}
+
+export const runSetup = async (setupIn: SetupIn, options?: RequestInit): Promise<runSetupResponse> => {
+  
+  return apiMutator<runSetupResponse>(getRunSetupUrl(),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      setupIn,)
+  }
+);}
+
+
+
+
+export const getRunSetupMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof runSetup>>, TError,{data: SetupIn}, TContext>, request?: SecondParameter<typeof apiMutator>}
+): UseMutationOptions<Awaited<ReturnType<typeof runSetup>>, TError,{data: SetupIn}, TContext> => {
+
+const mutationKey = ['runSetup'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof runSetup>>, {data: SetupIn}> = (props) => {
+          const {data} = props ?? {};
+
+          return  runSetup(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RunSetupMutationResult = NonNullable<Awaited<ReturnType<typeof runSetup>>>
+    export type RunSetupMutationBody = SetupIn
+    export type RunSetupMutationError = HTTPValidationError
+
+    /**
+ * @summary Run Setup
+ */
+export const useRunSetup = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof runSetup>>, TError,{data: SetupIn}, TContext>, request?: SecondParameter<typeof apiMutator>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof runSetup>>,
+        TError,
+        {data: SetupIn},
+        TContext
+      > => {
+
+      const mutationOptions = getRunSetupMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+    
+/**
+ * @summary Login
+ */
+export type loginResponse200 = {
+  data: EnvelopeCurrentUserContext
+  status: 200
+}
+
+export type loginResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+    
+export type loginResponseSuccess = (loginResponse200) & {
+  headers: Headers;
+};
+export type loginResponseError = (loginResponse422) & {
+  headers: Headers;
+};
+
+export type loginResponse = (loginResponseSuccess | loginResponseError)
+
+export const getLoginUrl = () => {
+
+
+  
+
+  return `/api/v1/auth/login`
+}
+
+export const login = async (loginIn: LoginIn, options?: RequestInit): Promise<loginResponse> => {
+  
+  return apiMutator<loginResponse>(getLoginUrl(),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      loginIn,)
+  }
+);}
+
+
+
+
+export const getLoginMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof login>>, TError,{data: LoginIn}, TContext>, request?: SecondParameter<typeof apiMutator>}
+): UseMutationOptions<Awaited<ReturnType<typeof login>>, TError,{data: LoginIn}, TContext> => {
+
+const mutationKey = ['login'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof login>>, {data: LoginIn}> = (props) => {
+          const {data} = props ?? {};
+
+          return  login(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type LoginMutationResult = NonNullable<Awaited<ReturnType<typeof login>>>
+    export type LoginMutationBody = LoginIn
+    export type LoginMutationError = HTTPValidationError
+
+    /**
+ * @summary Login
+ */
+export const useLogin = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof login>>, TError,{data: LoginIn}, TContext>, request?: SecondParameter<typeof apiMutator>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof login>>,
+        TError,
+        {data: LoginIn},
+        TContext
+      > => {
+
+      const mutationOptions = getLoginMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+    
+/**
+ * @summary Logout
+ */
+export type logoutResponse200 = {
+  data: EnvelopeNoneType
+  status: 200
+}
+    
+export type logoutResponseSuccess = (logoutResponse200) & {
+  headers: Headers;
+};
+;
+
+export type logoutResponse = (logoutResponseSuccess)
+
+export const getLogoutUrl = () => {
+
+
+  
+
+  return `/api/v1/auth/logout`
+}
+
+export const logout = async ( options?: RequestInit): Promise<logoutResponse> => {
+  
+  return apiMutator<logoutResponse>(getLogoutUrl(),
+  {      
+    ...options,
+    method: 'POST'
+    
+    
+  }
+);}
+
+
+
+
+export const getLogoutMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof logout>>, TError,void, TContext>, request?: SecondParameter<typeof apiMutator>}
+): UseMutationOptions<Awaited<ReturnType<typeof logout>>, TError,void, TContext> => {
+
+const mutationKey = ['logout'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof logout>>, void> = () => {
+          
+
+          return  logout(requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type LogoutMutationResult = NonNullable<Awaited<ReturnType<typeof logout>>>
+    
+    export type LogoutMutationError = unknown
+
+    /**
+ * @summary Logout
+ */
+export const useLogout = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof logout>>, TError,void, TContext>, request?: SecondParameter<typeof apiMutator>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof logout>>,
+        TError,
+        void,
+        TContext
+      > => {
+
+      const mutationOptions = getLogoutMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }

@@ -1,5 +1,6 @@
 from functools import lru_cache
 
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -12,10 +13,17 @@ class Settings(BaseSettings):
 
     ai_platform_base_url: str = "http://localhost:8123"
     ai_platform_api_key: str = ""
+    ai_platform_default_agent_id: str = ""
 
     mcp_auth_token: str = "change-me-mcp-token"
 
     cors_origins: list[str] = ["http://localhost:5173"]
+
+    session_cookie_name: str = "worknexus_session"
+    session_ttl_days: int = 7
+    delegation_token_ttl_seconds: int = Field(default=600, ge=300, le=600)
+    bcrypt_rounds: int = 12
+    invite_ttl_days: int = 7
 
 
 @lru_cache

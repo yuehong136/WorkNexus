@@ -1,15 +1,26 @@
 import uuid
 from collections.abc import AsyncGenerator
 from datetime import UTC, datetime
+from typing import ClassVar
 
+from sqlalchemy import DateTime, MetaData, String
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 from worknexus.config import get_settings
 
+NAMING_CONVENTION = {
+    "ix": "ix_%(column_0_label)s",
+    "uq": "uq_%(table_name)s_%(column_0_N_name)s",
+    "ck": "ck_%(table_name)s_%(constraint_name)s",
+    "fk": "fk_%(table_name)s_%(column_0_name)s_%(referred_table_name)s",
+    "pk": "pk_%(table_name)s",
+}
+
 
 class Base(DeclarativeBase):
-    pass
+    metadata = MetaData(naming_convention=NAMING_CONVENTION)
+    type_annotation_map: ClassVar[dict[type, object]] = {datetime: DateTime(timezone=True)}
 
 
 def _uuid() -> str:
@@ -20,11 +31,14 @@ def _now() -> datetime:
     return datetime.now(UTC)
 
 
-class EntityMixin:
-    id: Mapped[str] = mapped_column(primary_key=True, default=_uuid)
-    tenant_id: Mapped[str] = mapped_column(default="default", index=True)
+class IdTimestampMixin:
+    id: Mapped[str] = mapped_column(String(32), primary_key=True, default=_uuid)
     created_at: Mapped[datetime] = mapped_column(default=_now)
     updated_at: Mapped[datetime] = mapped_column(default=_now, onupdate=_now)
+
+
+class EntityMixin(IdTimestampMixin):
+    tenant_id: Mapped[str] = mapped_column(String(32), index=True)
 
 
 _engine: AsyncEngine | None = None

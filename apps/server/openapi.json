@@ -27,6 +27,569 @@
           }
         }
       }
+    },
+    "/api/v1/setup/status": {
+      "get": {
+        "tags": [
+          "identity"
+        ],
+        "summary": "Get Setup Status",
+        "operationId": "get_setup_status",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Envelope_SetupStatusOut_"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/setup": {
+      "post": {
+        "tags": [
+          "identity"
+        ],
+        "summary": "Run Setup",
+        "operationId": "run_setup",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetupIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Envelope_CurrentUserContext_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/login": {
+      "post": {
+        "tags": [
+          "identity"
+        ],
+        "summary": "Login",
+        "operationId": "login",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Envelope_CurrentUserContext_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/logout": {
+      "post": {
+        "tags": [
+          "identity"
+        ],
+        "summary": "Logout",
+        "operationId": "logout",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Envelope_NoneType_"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AIContextOut": {
+        "properties": {
+          "availableAgents": {
+            "items": {
+              "$ref": "#/components/schemas/AgentOut"
+            },
+            "type": "array",
+            "title": "Availableagents"
+          }
+        },
+        "type": "object",
+        "required": [
+          "availableAgents"
+        ],
+        "title": "AIContextOut"
+      },
+      "AgentOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "status": {
+            "$ref": "#/components/schemas/AgentStatus"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "status"
+        ],
+        "title": "AgentOut"
+      },
+      "AgentStatus": {
+        "type": "string",
+        "enum": [
+          "active",
+          "disabled"
+        ],
+        "title": "AgentStatus"
+      },
+      "CurrentUserContext": {
+        "properties": {
+          "user": {
+            "$ref": "#/components/schemas/UserOut"
+          },
+          "tenant": {
+            "$ref": "#/components/schemas/TenantOut"
+          },
+          "roles": {
+            "items": {
+              "$ref": "#/components/schemas/Role"
+            },
+            "type": "array",
+            "title": "Roles"
+          },
+          "permissions": {
+            "items": {
+              "$ref": "#/components/schemas/Permission"
+            },
+            "type": "array",
+            "title": "Permissions"
+          },
+          "projects": {
+            "items": {
+              "$ref": "#/components/schemas/ProjectAccessOut"
+            },
+            "type": "array",
+            "title": "Projects"
+          },
+          "ai": {
+            "$ref": "#/components/schemas/AIContextOut"
+          }
+        },
+        "type": "object",
+        "required": [
+          "user",
+          "tenant",
+          "roles",
+          "permissions",
+          "projects",
+          "ai"
+        ],
+        "title": "CurrentUserContext"
+      },
+      "Envelope_CurrentUserContext_": {
+        "properties": {
+          "code": {
+            "type": "integer",
+            "title": "Code",
+            "default": 0
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "default": "ok"
+          },
+          "data": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CurrentUserContext"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "title": "Envelope[CurrentUserContext]"
+      },
+      "Envelope_NoneType_": {
+        "properties": {
+          "code": {
+            "type": "integer",
+            "title": "Code",
+            "default": 0
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "default": "ok"
+          },
+          "data": {
+            "type": "null",
+            "title": "Data"
+          }
+        },
+        "type": "object",
+        "title": "Envelope[NoneType]"
+      },
+      "Envelope_SetupStatusOut_": {
+        "properties": {
+          "code": {
+            "type": "integer",
+            "title": "Code",
+            "default": 0
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "default": "ok"
+          },
+          "data": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SetupStatusOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "title": "Envelope[SetupStatusOut]"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "IdentityProvider": {
+        "type": "string",
+        "enum": [
+          "local",
+          "multirag",
+          "oidc"
+        ],
+        "title": "IdentityProvider"
+      },
+      "LoginIn": {
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email"
+          },
+          "password": {
+            "type": "string",
+            "title": "Password"
+          }
+        },
+        "type": "object",
+        "required": [
+          "email",
+          "password"
+        ],
+        "title": "LoginIn"
+      },
+      "Permission": {
+        "type": "string",
+        "enum": [
+          "tenant.manage",
+          "user.read",
+          "user.invite",
+          "user.manage",
+          "role.assign",
+          "ai_agent.read",
+          "ai_agent.manage",
+          "audit.read",
+          "project.create",
+          "project.read",
+          "project.update",
+          "project.archive",
+          "project.member.manage",
+          "work_item.read",
+          "work_item.create",
+          "work_item.update",
+          "work_item.delete",
+          "work_item.transition",
+          "work_item.comment",
+          "work_item.assign",
+          "skill.read",
+          "skill.invoke",
+          "workchat.use",
+          "agent_action.confirm",
+          "intake.read",
+          "intake.create",
+          "intake.triage",
+          "dashboard.read"
+        ],
+        "title": "Permission"
+      },
+      "ProjectAccessOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "role": {
+            "$ref": "#/components/schemas/Role"
+          },
+          "permissions": {
+            "items": {
+              "$ref": "#/components/schemas/Permission"
+            },
+            "type": "array",
+            "title": "Permissions"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "role",
+          "permissions"
+        ],
+        "title": "ProjectAccessOut"
+      },
+      "Role": {
+        "type": "string",
+        "enum": [
+          "owner",
+          "admin",
+          "project_admin",
+          "member",
+          "viewer",
+          "ai_agent"
+        ],
+        "title": "Role"
+      },
+      "SetupIn": {
+        "properties": {
+          "workspaceName": {
+            "type": "string",
+            "title": "Workspacename",
+            "default": "Default Workspace"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email"
+          },
+          "displayName": {
+            "type": "string",
+            "title": "Displayname"
+          },
+          "password": {
+            "type": "string",
+            "title": "Password"
+          }
+        },
+        "type": "object",
+        "required": [
+          "email",
+          "displayName",
+          "password"
+        ],
+        "title": "SetupIn"
+      },
+      "SetupStatusOut": {
+        "properties": {
+          "initialized": {
+            "type": "boolean",
+            "title": "Initialized"
+          }
+        },
+        "type": "object",
+        "required": [
+          "initialized"
+        ],
+        "title": "SetupStatusOut"
+      },
+      "TenantOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "slug": {
+            "type": "string",
+            "title": "Slug"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "slug"
+        ],
+        "title": "TenantOut"
+      },
+      "UserOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "email": {
+            "type": "string",
+            "title": "Email"
+          },
+          "displayName": {
+            "type": "string",
+            "title": "Displayname"
+          },
+          "avatarUrl": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Avatarurl"
+          },
+          "identityProvider": {
+            "$ref": "#/components/schemas/IdentityProvider"
+          },
+          "externalUserId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Externaluserid"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "email",
+          "displayName",
+          "avatarUrl",
+          "identityProvider",
+          "externalUserId"
+        ],
+        "title": "UserOut"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
     }
   }
 }
