@@ -18,6 +18,6 @@
     "test:web": "npm run test --workspace=apps/web",
     "dev:server": "cd apps/server && uv run uvicorn worknexus.main:app --reload --port 8200",
     "test:server": "cd apps/server && uv run pytest",
-    "contracts:generate": "npm run generate --workspace=packages/contracts"
+    "contracts:generate": "cd apps/server && uv run python -m worknexus.openapi && cd ../.. && npm run generate --workspace=packages/contracts"
   }
 }

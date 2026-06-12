@@ -312,7 +312,7 @@ Tailwind 4 CSS-first，单一真相源在 `styles/globals.css`：
 
 | 场景 | 唯一写法 |
 | --- | --- |
-| 路由签名 | `async def`，依赖注入 `db: AsyncSession = Depends(get_db)`、`actor: Actor = Depends(get_current_actor)`；路由函数体 ≤15 行，超出说明逻辑该下沉 service |
+| 路由签名 | `async def`，依赖注入用 `Annotated` 风格：`db: Annotated[AsyncSession, Depends(get_db)]`、`actor: Annotated[Actor, Depends(get_current_actor)]`；路由函数体 ≤15 行，超出说明逻辑该下沉 service |
 | service 函数 | 纯函数式模块（非类）：`async def create_work_item(db, actor, data: WorkItemCreate) -> WorkItem`；第一个参数 db，第二个 actor，第三个起业务参数 |
 | 审计写入 | service 内调 `audit.record(db, actor, action, resource, before, after)`，与业务写库同事务 |
 | 分页 | 统一 `core/pagination.py` 的 `Page[T]` 泛型 + `page`/`page_size` 查询参数；禁止各模块自定义分页结构 |

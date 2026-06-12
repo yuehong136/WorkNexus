@@ -1,0 +1,79 @@
+@import 'tailwindcss';
+
+:root,
+[data-theme='light'] {
+  --surface-primary: oklch(100% 0 0);
+  --surface-secondary: oklch(97.5% 0.002 250);
+  --surface-raised: oklch(100% 0 0);
+  --surface-overlay: oklch(100% 0 0);
+
+  --text-primary: oklch(21% 0.01 250);
+  --text-secondary: oklch(42% 0.01 250);
+  --text-muted: oklch(58% 0.008 250);
+  --text-inverse: oklch(98% 0 0);
+
+  --border-default: oklch(91% 0.004 250);
+  --border-strong: oklch(83% 0.006 250);
+
+  --brand-primary: oklch(55% 0.2 262);
+  --brand-primary-hover: oklch(49% 0.21 262);
+  --brand-primary-foreground: oklch(98% 0 0);
+
+  --status-success: oklch(63% 0.17 150);
+  --status-warning: oklch(75% 0.17 75);
+  --status-error: oklch(60% 0.21 25);
+  --status-info: oklch(62% 0.16 240);
+}
+
+[data-theme='dark'] {
+  --surface-primary: oklch(16% 0.008 255);
+  --surface-secondary: oklch(20% 0.01 255);
+  --surface-raised: oklch(22% 0.01 255);
+  --surface-overlay: oklch(24% 0.012 255);
+
+  --text-primary: oklch(95% 0.004 250);
+  --text-secondary: oklch(75% 0.008 250);
+  --text-muted: oklch(58% 0.01 250);
+  --text-inverse: oklch(20% 0.01 250);
+
+  --border-default: oklch(30% 0.01 255);
+  --border-strong: oklch(40% 0.012 255);
+
+  --brand-primary: oklch(65% 0.18 262);
+  --brand-primary-hover: oklch(70% 0.17 262);
+  --brand-primary-foreground: oklch(15% 0.01 262);
+
+  --status-success: oklch(70% 0.16 150);
+  --status-warning: oklch(80% 0.15 75);
+  --status-error: oklch(68% 0.19 25);
+  --status-info: oklch(70% 0.14 240);
+}
+
+@theme inline {
+  --color-surface-primary: var(--surface-primary);
+  --color-surface-secondary: var(--surface-secondary);
+  --color-surface-raised: var(--surface-raised);
+  --color-surface-overlay: var(--surface-overlay);
+
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
+  --color-text-inverse: var(--text-inverse);
+
+  --color-border-default: var(--border-default);
+  --color-border-strong: var(--border-strong);
+
+  --color-brand-primary: var(--brand-primary);
+  --color-brand-primary-hover: var(--brand-primary-hover);
+  --color-brand-primary-foreground: var(--brand-primary-foreground);
+
+  --color-status-success: var(--status-success);
+  --color-status-warning: var(--status-warning);
+  --color-status-error: var(--status-error);
+  --color-status-info: var(--status-info);
+}
+
+body {
+  background-color: var(--surface-secondary);
+  color: var(--text-primary);
+}

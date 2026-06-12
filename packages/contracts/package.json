@@ -2,5 +2,18 @@
   "name": "@worknexus/contracts",
   "version": "0.1.0",
   "private": true,
-  "description": "orval 从后端 OpenAPI 生成的 API 类型与 client（占位，待脚手架 PR 初始化）"
+  "type": "module",
+  "description": "API types and react-query client generated from the WorkNexus OpenAPI spec via orval",
+  "main": "src/api.ts",
+  "exports": {
+    ".": "./src/api.ts",
+    "./mutator": "./src/mutator.ts"
+  },
+  "scripts": {
+    "generate": "orval --config orval.config.ts"
+  },
+  "devDependencies": {
+    "orval": "^7.13.2",
+    "typescript": "^6.0.3"
+  }
 }
