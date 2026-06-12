@@ -224,7 +224,7 @@ apps/web/src/
 │       ├── routes/       # 该 feature 页面（路由懒加载入口）
 │       └── stores/       # 该 feature 的 zustand store（如需要）
 ├── lib/                  # api-client（APIError）、query-client、sse 流式、utils
-├── stores/               # 全局 store：auth、ui（语言/主题的唯一持久化入口）
+├── stores/               # 全局 store：ui（语言/主题的唯一持久化入口）；auth 不设 store——会话在 HttpOnly Cookie，/me 归 TanStack Query（lib/auth）
 ├── locales/              # locale-registry.ts + zh-CN/ en-US/（按 feature namespace 分文件）
 ├── styles/               # globals.css：@theme 语义 token + [data-theme] 变量
 └── types/                # 少量全局类型（API 类型一律来自 packages/contracts）
@@ -275,7 +275,7 @@ Tailwind 4 CSS-first，单一真相源在 `styles/globals.css`：
 ### 5.4 API 与状态规范
 
 - API 类型与 client 由 orval 从后端 OpenAPI 生成到 `packages/contracts`，**禁止手写/手改生成产物**；后端接口变更后运行 `npm run contracts:generate` 同步。
-- 自定义 fetch mutator 在 `lib/api-client.ts`：注入 Bearer token、解析 Envelope（`code !== 0` 抛 `APIError(code, message)`）、401 时清理会话。
+- 自定义 fetch mutator 在 `packages/contracts/src/mutator.ts`：所有请求 `credentials: 'include'`（会话在 HttpOnly Cookie，禁止 JS 持有凭据）、解析 Envelope（`code !== 0` 抛 `APIError(code, message)`）；`APIError` 类以 contracts 包为唯一定义，`lib/api-client.ts` 仅 re-export 并提供 `unwrap()`（orval 响应 → envelope payload）。401 统一在 `lib/query-client.ts` 捕获并 reset me query，由路由守卫重定向。
 - 每个 feature 的 `api/keys.ts` 必须用 Query Key Factory 模式（`workItemKeys.list(params)` 等），禁止裸数组 key。
 - 服务器状态一律 TanStack Query；zustand 只放纯客户端状态（auth 会话、ui 偏好、临时交互态）。SSE 流式 chunk 不进 Query cache。
 
@@ -303,7 +303,7 @@ Tailwind 4 CSS-first，单一真相源在 `styles/globals.css`：
 | 场景 | 唯一写法 |
 | --- | --- |
 | 数据查询 | `features/<f>/api/` 内 `use<Entity>Query` / `use<Entity>ListQuery`，key 来自该 feature 的 Key Factory；组件内禁止内联 `useQuery` 配置对象超过 queryKey/queryFn/enabled 三项，复杂配置下沉 hook |
-| 数据变更 | `use<Action><Entity>Mutation`；成功后用 Key Factory invalidate（禁止手写字符串 key）；错误提示由 `lib/query-client.ts` 全局 `onError` 统一 toast，组件内只处理需要特殊交互的错误 |
+| 数据变更 | `use<Action><Entity>Mutation`；成功后用 Key Factory invalidate（禁止手写字符串 key）；错误提示由 `lib/query-client.ts` 全局 `onError` 统一 toast；需要表单内联展示错误的 mutation 声明 `meta: { suppressToast: true }` 并在组件内按错误码映射 i18n 文案 |
 | 加载/空/错误三态 | 一律用 `components/patterns/` 的 `PageSkeleton` / `EmptyState` / `ErrorState`；禁止各页面手写 spinner、空白 div 或自定义错误文案布局 |
 | 表单 | react-hook-form + `zodResolver` + shadcn `Form/FormField/FormItem/FormMessage` 全链；zod schema 放 `features/<f>/api/schemas.ts`；提交按钮 disabled/loading 绑 `mutation.isPending`；校验文案走 i18n |
 | 确认操作 | 统一 `patterns/ConfirmDialog`（封装 shadcn AlertDialog）；禁止 `window.confirm` |
@@ -315,6 +315,9 @@ Tailwind 4 CSS-first，单一真相源在 `styles/globals.css`：
 | zustand 取值 | 一律 selector：`useUIStore(s => s.theme)`；禁止解构整个 store 导致全量重渲染；store 定义含 `persist` + `partialize`（只持久化必要字段） |
 | 图表颜色 | 从 CSS 变量读语义 token（`getComputedStyle`），禁止硬编码十六进制色值 |
 | 全局快捷键/命令 | cmdk 命令面板统一注册，禁止散落 `keydown` 监听 |
+| 当前用户上下文/权限控制 | 统一消费 `lib/auth` 的 `useMeQuery`；UI 权限判断只用 `useHasPermission` / `PermissionGate`（`lib/auth`），禁止自行读 cookie、缓存权限或解析角色 |
+| 路由守卫 | `features/auth` 的 `RequireAuth`（受保护区）与 `GuestOnly`（login/setup）布局路由；禁止在页面组件内写跳转守卫逻辑 |
+| 契约响应解包 | orval 生成的 client 函数返回 `{ data: Envelope, status }`，一律经 `lib/api-client.ts` 的 `unwrap()` 取 payload；禁止手写 `.data.data` 链 |
 
 ### 5.6 后端统一写法手册
 

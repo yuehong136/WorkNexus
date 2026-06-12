@@ -4,9 +4,9 @@
   "private": true,
   "type": "module",
   "description": "API types and react-query client generated from the WorkNexus OpenAPI spec via orval",
-  "main": "src/api.ts",
+  "main": "src/index.ts",
   "exports": {
-    ".": "./src/api.ts",
+    ".": "./src/index.ts",
     "./mutator": "./src/mutator.ts"
   },
   "scripts": {

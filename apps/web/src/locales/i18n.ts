@@ -1,5 +1,8 @@
-import i18next from 'i18next'
+import i18next, { type TFunction } from 'i18next'
 import { initReactI18next } from 'react-i18next'
+
+/** t() signature covering every namespace — for helpers that take t as a parameter. */
+export type AppTFunction = TFunction<['common', 'auth', 'settings']>
 
 import { DEFAULT_LOCALE, localeRegistry, type ProductLocale } from './locale-registry'
 
@@ -19,7 +22,7 @@ export async function initI18n(initialLocale: ProductLocale = DEFAULT_LOCALE): P
     lng: initialLocale,
     fallbackLng: DEFAULT_LOCALE,
     defaultNS: 'common',
-    ns: ['common'],
+    ns: ['common', 'auth', 'settings'],
     resources: {},
     interpolation: { escapeValue: false },
   })

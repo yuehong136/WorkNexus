@@ -10,6 +10,32 @@ export default {
     skills: 'Skills / MCP',
     audit: '审计日志',
     settings: '设置',
+    members: '成员',
+  },
+  actions: {
+    close: '关闭',
+    confirm: '确认',
+    cancel: '取消',
+    retry: '重试',
+    copy: '复制',
+    done: '完成',
+  },
+  errors: {
+    requestFailed: '请求失败，请稍后重试',
+  },
+  empty: {
+    title: '暂无数据',
+  },
+  error: {
+    title: '加载失败',
+  },
+  userMenu: {
+    logout: '退出登录',
+  },
+  pagination: {
+    previous: '上一页',
+    next: '下一页',
+    pageOf: '第 {{page}} / {{total}} 页',
   },
   theme: {
     light: '亮色',

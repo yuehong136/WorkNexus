@@ -3,6 +3,8 @@ import { useTranslation } from 'react-i18next'
 import { NavLink, Outlet } from 'react-router'
 
 import { Button } from '@/components/ui/button'
+import { UserMenu } from '@/features/auth/components/user-menu'
+import { PermissionGate } from '@/lib/auth/permission-gate'
 import { paths } from '@/lib/paths'
 import { cn } from '@/lib/utils'
 import { type Theme, useUIStore } from '@/stores/ui'
@@ -49,6 +51,12 @@ function LanguageToggle() {
   )
 }
 
+const navLinkClassName = ({ isActive }: { isActive: boolean }) =>
+  cn(
+    'block rounded-md px-3 py-2 text-sm text-text-secondary hover:bg-surface-secondary',
+    isActive && 'bg-surface-secondary font-medium text-text-primary',
+  )
+
 export function AppShell() {
   const { t } = useTranslation()
 
@@ -60,23 +68,21 @@ export function AppShell() {
           <span className="text-xs text-text-muted">{t('app.tagline')}</span>
         </div>
         <nav className="flex-1 space-y-1 p-2">
-          <NavLink
-            to={paths.home()}
-            className={({ isActive }) =>
-              cn(
-                'block rounded-md px-3 py-2 text-sm text-text-secondary hover:bg-surface-secondary',
-                isActive && 'bg-surface-secondary font-medium text-text-primary',
-              )
-            }
-          >
+          <NavLink to={paths.home()} end className={navLinkClassName}>
             {t('nav.home')}
           </NavLink>
+          <PermissionGate permission="user.read">
+            <NavLink to={paths.settingsMembers()} className={navLinkClassName}>
+              {t('nav.members')}
+            </NavLink>
+          </PermissionGate>
         </nav>
       </aside>
       <div className="flex flex-1 flex-col">
         <header className="flex h-14 items-center justify-end gap-1 border-b border-border-default bg-surface-primary px-4">
           <LanguageToggle />
           <ThemeToggle />
+          <UserMenu />
         </header>
         <main className="flex-1 overflow-auto p-6">
           <Outlet />

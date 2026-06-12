@@ -12,6 +12,32 @@ export default {
     skills: 'Skills / MCP',
     audit: 'Audit Log',
     settings: 'Settings',
+    members: 'Members',
+  },
+  actions: {
+    close: 'Close',
+    confirm: 'Confirm',
+    cancel: 'Cancel',
+    retry: 'Retry',
+    copy: 'Copy',
+    done: 'Done',
+  },
+  errors: {
+    requestFailed: 'Request failed, please try again later',
+  },
+  empty: {
+    title: 'No data yet',
+  },
+  error: {
+    title: 'Failed to load',
+  },
+  userMenu: {
+    logout: 'Sign out',
+  },
+  pagination: {
+    previous: 'Previous',
+    next: 'Next',
+    pageOf: 'Page {{page}} of {{total}}',
   },
   theme: {
     light: 'Light',

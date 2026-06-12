@@ -1,0 +1,57 @@
+import type settings from '../zh-CN/settings'
+
+export default {
+  members: {
+    title: 'Members',
+    description: 'Manage workspace members and invitations',
+    invitesSection: 'Invitations',
+    columns: {
+      name: 'Member',
+      email: 'Email',
+      status: 'Status',
+      lastLoginAt: 'Last sign-in',
+      createdAt: 'Joined',
+      target: 'Invited role',
+      expiresAt: 'Expires',
+      actions: 'Actions',
+    },
+    userStatus: {
+      active: 'Active',
+      invited: 'Invited',
+      disabled: 'Disabled',
+    },
+    inviteStatus: {
+      pending: 'Pending',
+      accepted: 'Accepted',
+      expired: 'Expired',
+      revoked: 'Revoked',
+    },
+  },
+  invite: {
+    button: 'Invite member',
+    title: 'Invite member',
+    description: 'Generate an invitation link and share it with the invitee',
+    target: 'Invitation type',
+    targetProject: 'Project member',
+    targetTenantAdmin: 'Tenant admin',
+    project: 'Project',
+    role: 'Project role',
+    roles: {
+      owner: 'Owner',
+      admin: 'Admin',
+      project_admin: 'Project admin',
+      member: 'Member',
+      viewer: 'Viewer',
+      ai_agent: 'AI Agent',
+    },
+    projectRequired: 'Please select a project',
+    submit: 'Generate invitation link',
+    created: 'Invitation created. Copy the link below and send it to the invitee:',
+    linkCopied: 'Link copied',
+    empty: 'No invitations yet',
+    revoke: 'Revoke',
+    revokeTitle: 'Revoke invitation',
+    revokeDescription: 'Revoke the invitation sent to {{email}}? The link stops working immediately.',
+    revoked: 'Invitation revoked',
+  },
+} satisfies typeof settings
