@@ -27,10 +27,23 @@ app = FastAPI(
     lifespan=combine_lifespans(app_lifespan, mcp_app.lifespan),
 )
 
+# Dev only: accept any localhost / private-LAN origin on any port (vite hops
+# 5173 -> 5174 when busy; teammates hit the dev box via 192.168.x.x).
+# Production stays strictly on the cors_origins allowlist.
+DEV_CORS_ORIGIN_REGEX = (
+    r"^https?://("
+    r"localhost|127\.0\.0\.1"
+    r"|10\.\d{1,3}\.\d{1,3}\.\d{1,3}"
+    r"|172\.(1[6-9]|2\d|3[01])\.\d{1,3}\.\d{1,3}"
+    r"|192\.168\.\d{1,3}\.\d{1,3}"
+    r")(:\d+)?$"
+)
+
 app.add_middleware(RequestIdMiddleware)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=get_settings().cors_origins,
+    allow_origin_regex=DEV_CORS_ORIGIN_REGEX if get_settings().environment == "development" else None,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

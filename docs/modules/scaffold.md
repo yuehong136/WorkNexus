@@ -57,3 +57,4 @@ i18n namespace：`common`（zh-CN / en-US）
 | 日期 | PR | 变更摘要 |
 | --- | --- | --- |
 | 2026-06-12 | scaffold | 初始化前后端骨架、PostgreSQL compose、contracts 管线 |
+| 2026-06-13 | fix | 开发环境 CORS 放行 localhost/127.0.0.1/私网段任意端口（生产仍走 cors_origins 白名单）；前端 API 默认地址跟随页面主机名（局域网免配置）；dev server 监听 0.0.0.0；E2E 端口挪至 8211/5183 避开开发栈 |

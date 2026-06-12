@@ -4,8 +4,8 @@ import { defineConfig } from '@playwright/test'
 // stack (5173/8200, dev DB) is never touched. PostgreSQL must be running;
 // the globalSetup script drops/recreates worknexus_e2e and migrates it.
 const E2E_DATABASE_URL = 'postgresql+asyncpg://worknexus:worknexus@localhost:5432/worknexus_e2e'
-const API_PORT = 8201
-const WEB_PORT = 5174
+const API_PORT = 8211
+const WEB_PORT = 5183
 
 export default defineConfig({
   testDir: './e2e',

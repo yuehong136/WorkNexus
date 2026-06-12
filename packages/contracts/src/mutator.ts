@@ -16,8 +16,15 @@ interface EnvelopeBody {
   data?: unknown
 }
 
-const BASE_URL =
-  (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_BASE_URL) || 'http://localhost:8200/api/v1'
+// Without an explicit VITE_API_BASE_URL the API host follows the page host,
+// so opening the dev frontend via a LAN address reaches the same box's API
+// instead of the visitor's own localhost.
+const DEFAULT_BASE_URL =
+  typeof window !== 'undefined'
+    ? `http://${window.location.hostname}:8200/api/v1`
+    : 'http://localhost:8200/api/v1'
+
+const BASE_URL = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_BASE_URL) || DEFAULT_BASE_URL
 
 /**
  * Session auth rides on an HttpOnly cookie, so every request must send

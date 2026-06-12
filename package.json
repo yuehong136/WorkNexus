@@ -16,7 +16,7 @@
     "build:web": "npm run build --workspace=apps/web",
     "lint:web": "npm run lint --workspace=apps/web",
     "test:web": "npm run test --workspace=apps/web",
-    "dev:server": "cd apps/server && uv run uvicorn worknexus.main:app --reload --port 8200",
+    "dev:server": "cd apps/server && uv run uvicorn worknexus.main:app --reload --host 0.0.0.0 --port 8200",
     "test:server": "cd apps/server && uv run pytest",
     "contracts:generate": "cd apps/server && uv run python -m worknexus.openapi && cd ../.. && npm run generate --workspace=packages/contracts",
     "e2e": "npm run e2e --workspace=apps/web"
