@@ -2,6 +2,10 @@
 
 详细规范见 `AGENTS.md` 第 10 节，本文件是操作手册。
 
+## 会话必读链（强制）
+
+每个开发会话开始：`AGENTS.md`（规范）→ `docs/roadmap.md`（蓝图/进度/决策）→ `docs/modules/<module>.md`（模块细节）。有疑问先与用户讨论敲定，禁止靠假设开发。
+
 ## 模块文档驱动开发（强制）
 
 1. 开发任何模块前，复制 `docs/modules/_template.md` 为 `docs/modules/<module>.md`，写清目标、数据模型、API、MCP tools、UI、测试点。

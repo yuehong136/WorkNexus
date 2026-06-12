@@ -190,7 +190,14 @@ MCP 规范铁律：
 - 异常体系：业务异常统一抛 `BizError(code, message)`，由全局 exception handler 转 Envelope；未知异常返回固定文案 `"internal error"` + 日志记录完整堆栈，**禁止把 `str(exc)` 直接返回给客户端**。
 - HTTP 状态码：鉴权失败 401、权限不足 403、其余业务错误一律 200 + 非 0 code。
 
-### 4.4 配置、数据库与迁移
+### 4.4 认证与权限（v0.1 决策，详见 docs/roadmap.md D2/D3）
+
+- 会话：**server-side session + HttpOnly Cookie**（Secure[prod]、SameSite=Lax、DB 只存 token hash）。禁止 localStorage 存会话凭据。MCP 服务间认证用 Bearer token，用户级穿透用 delegation token（见第 7 节）。
+- 权限模型：6 个系统角色（`owner/admin/project_admin/member/viewer/ai_agent`）+ 代码常量权限矩阵；只有 `project_members`（项目成员与项目角色）和 `role_bindings`（tenant 级 / AI Agent / 特殊授权）两张表，**同一用户的项目角色禁止双写两表**。
+- 校验唯一入口：`core/access.py` 的 `can(subject, action, scope)` 与 `require_permission` 依赖；路由层禁止散落权限 if 判断。
+- 前端不自行推导权限，统一消费 `GET /api/v1/me` 的 `CurrentUserContext`；后端永远强制校验。
+
+### 4.5 配置、数据库与迁移
 
 - 配置只用 `config.py` 中的 `Settings(BaseSettings)`，环境变量前缀 `WORKNEXUS_`，通过 `get_settings()`（lru_cache）注入。禁止读 YAML、禁止模块级全局配置变量。
 - 全链路 async：路由 `async def` + `AsyncSession`（依赖注入 `Depends(get_db)`）。禁止在 async 路由中调同步阻塞 IO。
@@ -341,11 +348,15 @@ Tailwind 4 CSS-first，单一真相源在 `styles/globals.css`：
 
 ## 7. AI / Skill 安全规范（不可妥协）
 
-1. **AgentAction 确认流**：AI 产生的写动作一律先创建 `AgentAction(status=pending)`，用户确认后由 service 执行并标记 `executed`；拒绝则 `rejected`。`read` 级工具可直接执行；`low_write` 默认需确认（可由设置放宽）；`high_write` 永远需确认。
-2. **AI 角色权限边界**：AI Agent 角色不可删除数据、不可审批通过 Approval、不可导出敏感数据、不可管理成员与权限。
-3. **审计必记**：工作项创建/修改/状态流转、AI 建议生成、AgentAction 确认与执行、Skill 调用、权限变化、Skill 配置变化、数据导出。审计写入在 service 层完成，记录 `actor_type`（user/ai/system）、`actor_id`、资源类型/ID、前后变化。
-4. **SkillInvocation 全量留痕**：每次 MCP tool 调用记录调用方、tool 名、输入/输出摘要、状态、风险等级、是否经确认、关联 audit_log_id。
-5. 模型输出按**不可信输入**处理：前端渲染 AI 内容必须经 sanitize（DOMPurify），禁止 `dangerouslySetInnerHTML` 直插。
+> 身份、权限、AI 对接的完整决策见 `docs/roadmap.md` 第 4 节（D2–D7），此处为执行铁律。
+
+1. **AgentAction 确认流**：AI 产生的写动作一律先创建 `AgentAction(status=pending)`，用户确认后由 service 执行并标记 `executed`；拒绝则 `rejected`。风险等级固定 3 级（`read / low_write / high_write`，禁止新增等级）：`read` 直接执行；`low_write`（创建工作项/Intake、评论、改负责人、状态流转、补字段）默认需确认，可由项目管理员配置部分自动执行；`high_write`（删除、权限变更、审批通过、导出敏感数据、改 Skill 凭证、改流程关键配置）v0.1 禁止 AI 执行。
+2. **双重校验公式（写死）**：AI 动作执行前必须满足 用户权限 ∧ AI Agent 权限 ∧ 资源权限 ∧ 风险等级 ∧ 确认状态。WorkNexus 不信任 AI 平台返回的任何权限判断，落库前必须自行校验。
+3. **AI 身份穿透**：AI 代表用户调用 `/mcp` 时，身份只认 `X-WorkNexus-Delegation` 短期 delegation token（不透明随机串、DB 存 hash、TTL 5–10 分钟、绑定 tenant/user/agent/project/conversation/run、日志脱敏）。**tool 参数不得作为认证依据**；custom_header 中禁止直传 user_id / email / session token。
+4. **AI 上下文权限过滤（底层原则）**：用户看不到的数据，AI 也不能作为上下文读取。任何 AI 上下文构建必须先做权限过滤。
+5. **审计必记**：工作项创建/修改/状态流转、AI 建议生成、AgentAction 确认与执行、Skill 调用、权限变化、Skill 配置变化、数据导出。审计写入在 service 层与业务同事务，记录 `actor_type`（user/ai/system）、`actor_id`、资源类型/ID、前后变化；AI 动作另记 `requested_by`、`agent_id`、`approved_by`、`skill_invocation_id`。
+6. **SkillInvocation 全量留痕**：每次 MCP tool 调用记录调用方、tool 名、输入/输出摘要、状态、风险等级、是否经确认、关联 audit_log_id。
+7. 模型输出按**不可信输入**处理：前端渲染 AI 内容必须经 sanitize（DOMPurify），禁止 `dangerouslySetInnerHTML` 直插。
 
 ---
 
@@ -379,8 +390,9 @@ Tailwind 4 CSS-first，单一真相源在 `styles/globals.css`：
 
 ## 10. 开发流程规范（文档驱动，强制）
 
+0. **会话必读链**：每个开发会话开始时，按顺序读 `AGENTS.md` → `docs/roadmap.md`（全局蓝图、进度、已敲定决策 D1–D8）→ 对应 `docs/modules/<module>.md`。**对范围、设计、细节有疑问的，必须先与用户讨论敲定，禁止靠假设开发**；大纲（roadmap）的范围与决策变更必须经用户确认。
 1. **模块文档先行**：开发任何模块前，先从 `docs/modules/_template.md` 复制创建 `docs/modules/<module>.md`，写清目标、数据模型、API、MCP tools、UI、测试点。
-2. **PR 必须同步文档**：每完成一个 PR，必须在同 PR 内更新对应模块文档的"变更记录"小节。文档未更新的 PR 视为未完成。
+2. **PR 必须同步文档**：每完成一个 PR，必须在同 PR 内更新对应模块文档的"变更记录"小节，并同步 `docs/roadmap.md` 的模块进度。文档未更新的 PR 视为未完成。
 3. 提交信息遵循 **Conventional Commits** 且**一律使用英文**（`feat(work-items): ...`、`fix(intake): ...`），commitlint 强制；scope 用模块/feature 名。
 4. 分支模型：`main` 保护分支，功能分支 `feat/<module>-<desc>`，修复分支 `fix/<module>-<desc>`。
 5. AGENTS.md 与 CLAUDE.md 必须同提交同步；技术栈版本变更必须同步 `docs/tech-stack.md`。
