@@ -185,7 +185,7 @@ MCP 规范铁律：
 ```
 
 - `code = 0` 成功；非 0 为业务错误码（`core/errors.py` 集中定义枚举，按模块分段：1xxx 通用、2xxx work_items、3xxx intake……）。
-- 列表接口 `data` 内含 `items` + `total` + `page` + `page_size`。
+- 列表接口 `data` 内含 `items` + `total` + `page` + `page_size`（统一用 `core/pagination.py` 的 `Page[T]`；经 ApiModel 序列化后 JSON 字段为 camelCase，即 `pageSize`；查询参数保持 `page` / `page_size`）。
 - 异常体系：业务异常统一抛 `BizError(code, message)`，由全局 exception handler 转 Envelope；未知异常返回固定文案 `"internal error"` + 日志记录完整堆栈，**禁止把 `str(exc)` 直接返回给客户端**。
 - HTTP 状态码：鉴权失败 401、权限不足 403、其余业务错误一律 200 + 非 0 code。
 - 统一 `request_id`：中间件为每个请求注入，结构化日志全程携带，错误响应返回该 id 以便追踪。

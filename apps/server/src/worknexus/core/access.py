@@ -1,11 +1,22 @@
-"""RBAC constants: 6 system roles x permission matrix (decision D3).
+"""RBAC: 6 system roles x permission matrix (D3) and the single check entry point.
 
 v0.1 deliberately has no roles/permissions tables — this module is the single
-source of truth. `can()` / `require_permission` land here in the next PR.
-Matrix details and rationale: docs/modules/identity.md §6.
+source of truth, and `can()` / `require_permission` are the only places where
+permissions are evaluated. Matrix details and rationale: docs/modules/identity.md §6.
 """
 
+from collections.abc import Callable, Coroutine, Iterable
 from enum import StrEnum
+from typing import Annotated, Any
+
+from fastapi import Depends, Request
+from pydantic import BaseModel, Field
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from worknexus.core.deps import Actor, ActorType, get_current_actor
+from worknexus.core.errors import BizError, ErrorCode
+from worknexus.db import get_db
 
 
 class Role(StrEnum):
@@ -135,3 +146,104 @@ ROLE_PERMISSIONS: dict[Role, frozenset[Permission]] = {
     Role.VIEWER: _VIEWER_PERMISSIONS,
     Role.AI_AGENT: _AI_AGENT_PERMISSIONS,
 }
+
+
+def union_permissions(roles: Iterable[Role]) -> frozenset[Permission]:
+    return frozenset[Permission]().union(*(ROLE_PERMISSIONS[r] for r in roles))
+
+
+class Scope(BaseModel):
+    type: ScopeType = ScopeType.TENANT
+    project_id: str | None = None
+
+
+class Subject(BaseModel):
+    """An actor plus its resolved roles — loaded once per request."""
+
+    actor: Actor
+    tenant_roles: list[Role] = Field(default_factory=list)
+    project_roles: dict[str, Role] = Field(default_factory=dict)
+
+
+async def load_subject(db: AsyncSession, actor: Actor) -> Subject:
+    # Read-only lookups against identity tables; writes stay in identity.service.
+    from worknexus.modules.identity.models import ProjectMember, RoleBinding
+
+    subject_type = SubjectType.AI_AGENT if actor.type == ActorType.AI_AGENT else SubjectType.USER
+    bindings = await db.execute(
+        select(RoleBinding.role, RoleBinding.scope_type, RoleBinding.scope_id).where(
+            RoleBinding.subject_type == subject_type, RoleBinding.subject_id == actor.id
+        )
+    )
+    tenant_roles: set[Role] = set()
+    project_roles: dict[str, Role] = {}
+    for role, scope_type, scope_id in bindings.all():
+        if scope_type == ScopeType.TENANT:
+            tenant_roles.add(Role(role))
+        elif scope_id is not None:
+            project_roles[scope_id] = Role(role)
+    if subject_type == SubjectType.USER:
+        memberships = await db.execute(
+            select(ProjectMember.project_id, ProjectMember.role).where(ProjectMember.user_id == actor.id)
+        )
+        for project_id, role in memberships.all():
+            project_roles[project_id] = Role(role)
+    return Subject(actor=actor, tenant_roles=sorted(tenant_roles, key=list(Role).index), project_roles=project_roles)
+
+
+def permissions_for(subject: Subject, project_id: str | None = None) -> frozenset[Permission]:
+    """Effective permissions. Tenant roles apply globally. Without a project_id this
+    is the cross-role union (tenant-level capability checks like user.read); with one,
+    only that project's role contributes on top of the tenant roles."""
+    permissions = union_permissions(subject.tenant_roles)
+    if project_id is None:
+        permissions |= union_permissions(subject.project_roles.values())
+    else:
+        role = subject.project_roles.get(project_id)
+        if role is not None:
+            permissions |= ROLE_PERMISSIONS[role]
+    return permissions
+
+
+def can(subject: Subject, action: Permission, scope: Scope | None = None) -> bool:
+    if scope is not None and scope.type == ScopeType.PROJECT:
+        if scope.project_id is None:
+            return False
+        return action in permissions_for(subject, scope.project_id)
+    return action in permissions_for(subject)
+
+
+async def get_current_subject(
+    request: Request,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    actor: Annotated[Actor, Depends(get_current_actor)],
+) -> Subject:
+    cached = getattr(request.state, "subject", None)
+    if isinstance(cached, Subject):
+        return cached
+    subject = await load_subject(db, actor)
+    request.state.subject = subject
+    return subject
+
+
+def require_permission(
+    action: Permission, *, project_param: str | None = None
+) -> Callable[..., Coroutine[Any, Any, Subject]]:
+    """Dependency factory: resolves the Subject and enforces `action`.
+
+    With project_param, the project id is taken from the path (or query) parameter
+    of that name and the check runs project-scoped."""
+
+    async def dependency(
+        request: Request,
+        subject: Annotated[Subject, Depends(get_current_subject)],
+    ) -> Subject:
+        scope: Scope | None = None
+        if project_param is not None:
+            raw = request.path_params.get(project_param) or request.query_params.get(project_param)
+            scope = Scope(type=ScopeType.PROJECT, project_id=str(raw) if raw else None)
+        if not can(subject, action, scope):
+            raise BizError(ErrorCode.FORBIDDEN, "permission denied")
+        return subject
+
+    return dependency

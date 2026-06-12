@@ -19,11 +19,20 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  AcceptInviteIn,
   EnvelopeCurrentUserContext,
+  EnvelopeInviteCreatedOut,
+  EnvelopeInviteOut,
+  EnvelopeInvitePreviewOut,
   EnvelopeNoneType,
+  EnvelopePageInviteOut,
+  EnvelopePageUserListOut,
   EnvelopeSetupStatusOut,
   GetHealth200,
   HTTPValidationError,
+  InviteCreateIn,
+  ListInvitesParams,
+  ListUsersParams,
   LoginIn,
   SetupIn
 } from './model';
@@ -470,6 +479,666 @@ export const useLogout = <TError = unknown,
       > => {
 
       const mutationOptions = getLogoutMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+    
+/**
+ * @summary Get Me
+ */
+export type getMeResponse200 = {
+  data: EnvelopeCurrentUserContext
+  status: 200
+}
+    
+export type getMeResponseSuccess = (getMeResponse200) & {
+  headers: Headers;
+};
+;
+
+export type getMeResponse = (getMeResponseSuccess)
+
+export const getGetMeUrl = () => {
+
+
+  
+
+  return `/api/v1/me`
+}
+
+export const getMe = async ( options?: RequestInit): Promise<getMeResponse> => {
+  
+  return apiMutator<getMeResponse>(getGetMeUrl(),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+
+
+export const getGetMeQueryKey = () => {
+    return [
+    `/api/v1/me`
+    ] as const;
+    }
+
+    
+export const getGetMeQueryOptions = <TData = Awaited<ReturnType<typeof getMe>>, TError = unknown>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getMe>>, TError, TData>, request?: SecondParameter<typeof apiMutator>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetMeQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getMe>>> = ({ signal }) => getMe({ signal, ...requestOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getMe>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetMeQueryResult = NonNullable<Awaited<ReturnType<typeof getMe>>>
+export type GetMeQueryError = unknown
+
+
+/**
+ * @summary Get Me
+ */
+
+export function useGetMe<TData = Awaited<ReturnType<typeof getMe>>, TError = unknown>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getMe>>, TError, TData>, request?: SecondParameter<typeof apiMutator>}
+  
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetMeQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * @summary List Users
+ */
+export type listUsersResponse200 = {
+  data: EnvelopePageUserListOut
+  status: 200
+}
+
+export type listUsersResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+    
+export type listUsersResponseSuccess = (listUsersResponse200) & {
+  headers: Headers;
+};
+export type listUsersResponseError = (listUsersResponse422) & {
+  headers: Headers;
+};
+
+export type listUsersResponse = (listUsersResponseSuccess | listUsersResponseError)
+
+export const getListUsersUrl = (params?: ListUsersParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/v1/users?${stringifiedParams}` : `/api/v1/users`
+}
+
+export const listUsers = async (params?: ListUsersParams, options?: RequestInit): Promise<listUsersResponse> => {
+  
+  return apiMutator<listUsersResponse>(getListUsersUrl(params),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+
+
+export const getListUsersQueryKey = (params?: ListUsersParams,) => {
+    return [
+    `/api/v1/users`, ...(params ? [params]: [])
+    ] as const;
+    }
+
+    
+export const getListUsersQueryOptions = <TData = Awaited<ReturnType<typeof listUsers>>, TError = HTTPValidationError>(params?: ListUsersParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listUsers>>, TError, TData>, request?: SecondParameter<typeof apiMutator>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListUsersQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listUsers>>> = ({ signal }) => listUsers(params, { signal, ...requestOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listUsers>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListUsersQueryResult = NonNullable<Awaited<ReturnType<typeof listUsers>>>
+export type ListUsersQueryError = HTTPValidationError
+
+
+/**
+ * @summary List Users
+ */
+
+export function useListUsers<TData = Awaited<ReturnType<typeof listUsers>>, TError = HTTPValidationError>(
+ params?: ListUsersParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listUsers>>, TError, TData>, request?: SecondParameter<typeof apiMutator>}
+  
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListUsersQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * @summary Create Invite
+ */
+export type createInviteResponse200 = {
+  data: EnvelopeInviteCreatedOut
+  status: 200
+}
+
+export type createInviteResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+    
+export type createInviteResponseSuccess = (createInviteResponse200) & {
+  headers: Headers;
+};
+export type createInviteResponseError = (createInviteResponse422) & {
+  headers: Headers;
+};
+
+export type createInviteResponse = (createInviteResponseSuccess | createInviteResponseError)
+
+export const getCreateInviteUrl = () => {
+
+
+  
+
+  return `/api/v1/invites`
+}
+
+export const createInvite = async (inviteCreateIn: InviteCreateIn, options?: RequestInit): Promise<createInviteResponse> => {
+  
+  return apiMutator<createInviteResponse>(getCreateInviteUrl(),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      inviteCreateIn,)
+  }
+);}
+
+
+
+
+export const getCreateInviteMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createInvite>>, TError,{data: InviteCreateIn}, TContext>, request?: SecondParameter<typeof apiMutator>}
+): UseMutationOptions<Awaited<ReturnType<typeof createInvite>>, TError,{data: InviteCreateIn}, TContext> => {
+
+const mutationKey = ['createInvite'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createInvite>>, {data: InviteCreateIn}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createInvite(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateInviteMutationResult = NonNullable<Awaited<ReturnType<typeof createInvite>>>
+    export type CreateInviteMutationBody = InviteCreateIn
+    export type CreateInviteMutationError = HTTPValidationError
+
+    /**
+ * @summary Create Invite
+ */
+export const useCreateInvite = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createInvite>>, TError,{data: InviteCreateIn}, TContext>, request?: SecondParameter<typeof apiMutator>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createInvite>>,
+        TError,
+        {data: InviteCreateIn},
+        TContext
+      > => {
+
+      const mutationOptions = getCreateInviteMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+    
+/**
+ * @summary List Invites
+ */
+export type listInvitesResponse200 = {
+  data: EnvelopePageInviteOut
+  status: 200
+}
+
+export type listInvitesResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+    
+export type listInvitesResponseSuccess = (listInvitesResponse200) & {
+  headers: Headers;
+};
+export type listInvitesResponseError = (listInvitesResponse422) & {
+  headers: Headers;
+};
+
+export type listInvitesResponse = (listInvitesResponseSuccess | listInvitesResponseError)
+
+export const getListInvitesUrl = (params?: ListInvitesParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/v1/invites?${stringifiedParams}` : `/api/v1/invites`
+}
+
+export const listInvites = async (params?: ListInvitesParams, options?: RequestInit): Promise<listInvitesResponse> => {
+  
+  return apiMutator<listInvitesResponse>(getListInvitesUrl(params),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+
+
+export const getListInvitesQueryKey = (params?: ListInvitesParams,) => {
+    return [
+    `/api/v1/invites`, ...(params ? [params]: [])
+    ] as const;
+    }
+
+    
+export const getListInvitesQueryOptions = <TData = Awaited<ReturnType<typeof listInvites>>, TError = HTTPValidationError>(params?: ListInvitesParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listInvites>>, TError, TData>, request?: SecondParameter<typeof apiMutator>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListInvitesQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listInvites>>> = ({ signal }) => listInvites(params, { signal, ...requestOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listInvites>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListInvitesQueryResult = NonNullable<Awaited<ReturnType<typeof listInvites>>>
+export type ListInvitesQueryError = HTTPValidationError
+
+
+/**
+ * @summary List Invites
+ */
+
+export function useListInvites<TData = Awaited<ReturnType<typeof listInvites>>, TError = HTTPValidationError>(
+ params?: ListInvitesParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listInvites>>, TError, TData>, request?: SecondParameter<typeof apiMutator>}
+  
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListInvitesQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * @summary Revoke Invite
+ */
+export type revokeInviteResponse200 = {
+  data: EnvelopeInviteOut
+  status: 200
+}
+
+export type revokeInviteResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+    
+export type revokeInviteResponseSuccess = (revokeInviteResponse200) & {
+  headers: Headers;
+};
+export type revokeInviteResponseError = (revokeInviteResponse422) & {
+  headers: Headers;
+};
+
+export type revokeInviteResponse = (revokeInviteResponseSuccess | revokeInviteResponseError)
+
+export const getRevokeInviteUrl = (inviteId: string,) => {
+
+
+  
+
+  return `/api/v1/invites/${inviteId}/revoke`
+}
+
+export const revokeInvite = async (inviteId: string, options?: RequestInit): Promise<revokeInviteResponse> => {
+  
+  return apiMutator<revokeInviteResponse>(getRevokeInviteUrl(inviteId),
+  {      
+    ...options,
+    method: 'POST'
+    
+    
+  }
+);}
+
+
+
+
+export const getRevokeInviteMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof revokeInvite>>, TError,{inviteId: string}, TContext>, request?: SecondParameter<typeof apiMutator>}
+): UseMutationOptions<Awaited<ReturnType<typeof revokeInvite>>, TError,{inviteId: string}, TContext> => {
+
+const mutationKey = ['revokeInvite'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof revokeInvite>>, {inviteId: string}> = (props) => {
+          const {inviteId} = props ?? {};
+
+          return  revokeInvite(inviteId,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RevokeInviteMutationResult = NonNullable<Awaited<ReturnType<typeof revokeInvite>>>
+    
+    export type RevokeInviteMutationError = HTTPValidationError
+
+    /**
+ * @summary Revoke Invite
+ */
+export const useRevokeInvite = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof revokeInvite>>, TError,{inviteId: string}, TContext>, request?: SecondParameter<typeof apiMutator>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof revokeInvite>>,
+        TError,
+        {inviteId: string},
+        TContext
+      > => {
+
+      const mutationOptions = getRevokeInviteMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+    
+/**
+ * @summary Get Invite
+ */
+export type getInviteResponse200 = {
+  data: EnvelopeInvitePreviewOut
+  status: 200
+}
+
+export type getInviteResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+    
+export type getInviteResponseSuccess = (getInviteResponse200) & {
+  headers: Headers;
+};
+export type getInviteResponseError = (getInviteResponse422) & {
+  headers: Headers;
+};
+
+export type getInviteResponse = (getInviteResponseSuccess | getInviteResponseError)
+
+export const getGetInviteUrl = (token: string,) => {
+
+
+  
+
+  return `/api/v1/invites/${token}`
+}
+
+export const getInvite = async (token: string, options?: RequestInit): Promise<getInviteResponse> => {
+  
+  return apiMutator<getInviteResponse>(getGetInviteUrl(token),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+
+
+export const getGetInviteQueryKey = (token?: string,) => {
+    return [
+    `/api/v1/invites/${token}`
+    ] as const;
+    }
+
+    
+export const getGetInviteQueryOptions = <TData = Awaited<ReturnType<typeof getInvite>>, TError = HTTPValidationError>(token: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getInvite>>, TError, TData>, request?: SecondParameter<typeof apiMutator>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetInviteQueryKey(token);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getInvite>>> = ({ signal }) => getInvite(token, { signal, ...requestOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(token), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getInvite>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetInviteQueryResult = NonNullable<Awaited<ReturnType<typeof getInvite>>>
+export type GetInviteQueryError = HTTPValidationError
+
+
+/**
+ * @summary Get Invite
+ */
+
+export function useGetInvite<TData = Awaited<ReturnType<typeof getInvite>>, TError = HTTPValidationError>(
+ token: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getInvite>>, TError, TData>, request?: SecondParameter<typeof apiMutator>}
+  
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetInviteQueryOptions(token,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * @summary Accept Invite
+ */
+export type acceptInviteResponse200 = {
+  data: EnvelopeCurrentUserContext
+  status: 200
+}
+
+export type acceptInviteResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+    
+export type acceptInviteResponseSuccess = (acceptInviteResponse200) & {
+  headers: Headers;
+};
+export type acceptInviteResponseError = (acceptInviteResponse422) & {
+  headers: Headers;
+};
+
+export type acceptInviteResponse = (acceptInviteResponseSuccess | acceptInviteResponseError)
+
+export const getAcceptInviteUrl = (token: string,) => {
+
+
+  
+
+  return `/api/v1/invites/${token}/accept`
+}
+
+export const acceptInvite = async (token: string,
+    acceptInviteIn: AcceptInviteIn, options?: RequestInit): Promise<acceptInviteResponse> => {
+  
+  return apiMutator<acceptInviteResponse>(getAcceptInviteUrl(token),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      acceptInviteIn,)
+  }
+);}
+
+
+
+
+export const getAcceptInviteMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof acceptInvite>>, TError,{token: string;data: AcceptInviteIn}, TContext>, request?: SecondParameter<typeof apiMutator>}
+): UseMutationOptions<Awaited<ReturnType<typeof acceptInvite>>, TError,{token: string;data: AcceptInviteIn}, TContext> => {
+
+const mutationKey = ['acceptInvite'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof acceptInvite>>, {token: string;data: AcceptInviteIn}> = (props) => {
+          const {token,data} = props ?? {};
+
+          return  acceptInvite(token,data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AcceptInviteMutationResult = NonNullable<Awaited<ReturnType<typeof acceptInvite>>>
+    export type AcceptInviteMutationBody = AcceptInviteIn
+    export type AcceptInviteMutationError = HTTPValidationError
+
+    /**
+ * @summary Accept Invite
+ */
+export const useAcceptInvite = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof acceptInvite>>, TError,{token: string;data: AcceptInviteIn}, TContext>, request?: SecondParameter<typeof apiMutator>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof acceptInvite>>,
+        TError,
+        {token: string;data: AcceptInviteIn},
+        TContext
+      > => {
+
+      const mutationOptions = getAcceptInviteMutationOptions(options);
 
       return useMutation(mutationOptions);
     }
