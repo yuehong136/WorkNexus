@@ -1,0 +1,6 @@
+{
+  "name": "@worknexus/contracts",
+  "version": "0.1.0",
+  "private": true,
+  "description": "orval 从后端 OpenAPI 生成的 API 类型与 client（占位，待脚手架 PR 初始化）"
+}

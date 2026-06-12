@@ -1,0 +1,36 @@
+# --- 通用 ---
+.DS_Store
+*.log
+.env
+.env.local
+.env.*.local
+
+# --- IDE ---
+.idea/
+.vscode/
+*.iml
+
+# --- Node / 前端 ---
+node_modules/
+dist/
+coverage/
+.eslintcache
+*.tsbuildinfo
+playwright-report/
+test-results/
+
+# --- Python / 后端 ---
+__pycache__/
+*.py[cod]
+.venv/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+htmlcov/
+.coverage
+
+# --- 基础设施 ---
+infra/docker/data/
+
+# --- 本地参考资料（不入库） ---
+fastmcp3.4.1.txt

@@ -1,0 +1,23 @@
+{
+  "name": "worknexus",
+  "version": "0.1.0",
+  "private": true,
+  "description": "WorkNexus（智协中枢）：AI-native 团队协作与工单 WorkOS",
+  "workspaces": [
+    "apps/web",
+    "packages/*"
+  ],
+  "engines": {
+    "node": ">=22.12.0",
+    "npm": ">=10.0.0"
+  },
+  "scripts": {
+    "dev:web": "npm run dev --workspace=apps/web",
+    "build:web": "npm run build --workspace=apps/web",
+    "lint:web": "npm run lint --workspace=apps/web",
+    "test:web": "npm run test --workspace=apps/web",
+    "dev:server": "cd apps/server && uv run uvicorn worknexus.main:app --reload --port 8200",
+    "test:server": "cd apps/server && uv run pytest",
+    "contracts:generate": "npm run generate --workspace=packages/contracts"
+  }
+}

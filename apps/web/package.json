@@ -1,0 +1,6 @@
+{
+  "name": "@worknexus/web",
+  "version": "0.1.0",
+  "private": true,
+  "description": "WorkNexus 前端（占位，待脚手架 PR 初始化）"
+}
