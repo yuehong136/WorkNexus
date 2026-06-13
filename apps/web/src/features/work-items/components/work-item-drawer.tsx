@@ -239,7 +239,7 @@ export function WorkItemDrawer({
         if (!open) onClose()
       }}
     >
-      <SheetContent>
+      <SheetContent aria-describedby={undefined}>
         {workItemId !== null ? <DrawerBody projectId={projectId} workItemId={workItemId} onClose={onClose} /> : null}
       </SheetContent>
     </Sheet>

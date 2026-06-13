@@ -5,6 +5,11 @@ export default {
   newButton: '新建工作项',
   empty: '暂无工作项',
   noAssignee: '未指派',
+  board: {
+    title: '看板',
+    listView: '列表视图',
+    boardView: '看板视图',
+  },
   create: {
     title: '新建工作项',
     description: '在当前项目下创建一个工作项',

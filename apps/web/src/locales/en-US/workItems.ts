@@ -7,6 +7,11 @@ export default {
   newButton: 'New work item',
   empty: 'No work items yet',
   noAssignee: 'Unassigned',
+  board: {
+    title: 'Board',
+    listView: 'List view',
+    boardView: 'Board view',
+  },
   create: {
     title: 'New work item',
     description: 'Create a work item in this project',

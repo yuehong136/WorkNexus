@@ -1,8 +1,8 @@
 import type { WorkItemPriority, WorkItemStatus, WorkItemType } from '@worknexus/contracts'
-import { Plus } from 'lucide-react'
+import { Columns3, Plus } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link, useParams } from 'react-router'
+import { Link, useNavigate, useParams } from 'react-router'
 
 import { DataTable } from '@/components/patterns/data-table'
 import { EmptyState } from '@/components/patterns/empty-state'
@@ -30,6 +30,7 @@ const filterClassName =
 export function WorkItemsPage() {
   const { t } = useTranslation(['common', 'workItems'])
   const { projectId = '' } = useParams()
+  const navigate = useNavigate()
   const [page, setPage] = useState(1)
   const [status, setStatus] = useState<WorkItemStatus | ''>('')
   const [type, setType] = useState<WorkItemType | ''>('')
@@ -59,12 +60,18 @@ export function WorkItemsPage() {
           <h1 className="text-xl font-semibold text-text-primary">{t('workItems:title')}</h1>
           <p className="text-sm text-text-muted">{t('workItems:description')}</p>
         </div>
-        <PermissionGate permission="work_item.create" projectId={projectId}>
-          <Button onClick={() => setCreateOpen(true)}>
-            <Plus className="size-4" />
-            {t('workItems:newButton')}
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => void navigate(paths.board(projectId))}>
+            <Columns3 className="size-4" />
+            {t('workItems:board.boardView')}
           </Button>
-        </PermissionGate>
+          <PermissionGate permission="work_item.create" projectId={projectId}>
+            <Button onClick={() => setCreateOpen(true)}>
+              <Plus className="size-4" />
+              {t('workItems:newButton')}
+            </Button>
+          </PermissionGate>
+        </div>
       </div>
 
       <div className="flex flex-wrap gap-2">
