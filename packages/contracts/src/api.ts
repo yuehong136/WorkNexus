@@ -24,16 +24,25 @@ import type {
   EnvelopeInviteCreatedOut,
   EnvelopeInviteOut,
   EnvelopeInvitePreviewOut,
+  EnvelopeListProjectMemberOut,
   EnvelopeNoneType,
   EnvelopePageInviteOut,
+  EnvelopePageProjectOut,
   EnvelopePageUserListOut,
+  EnvelopeProjectMemberOut,
+  EnvelopeProjectOut,
   EnvelopeSetupStatusOut,
   GetHealth200,
   HTTPValidationError,
   InviteCreateIn,
   ListInvitesParams,
+  ListProjectsParams,
   ListUsersParams,
   LoginIn,
+  ProjectCreateIn,
+  ProjectMemberAddIn,
+  ProjectMemberUpdateIn,
+  ProjectUpdateIn,
   SetupIn
 } from './model';
 
@@ -1139,6 +1148,849 @@ export const useAcceptInvite = <TError = HTTPValidationError,
       > => {
 
       const mutationOptions = getAcceptInviteMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+    
+/**
+ * @summary List Projects
+ */
+export type listProjectsResponse200 = {
+  data: EnvelopePageProjectOut
+  status: 200
+}
+
+export type listProjectsResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+    
+export type listProjectsResponseSuccess = (listProjectsResponse200) & {
+  headers: Headers;
+};
+export type listProjectsResponseError = (listProjectsResponse422) & {
+  headers: Headers;
+};
+
+export type listProjectsResponse = (listProjectsResponseSuccess | listProjectsResponseError)
+
+export const getListProjectsUrl = (params?: ListProjectsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/v1/projects?${stringifiedParams}` : `/api/v1/projects`
+}
+
+export const listProjects = async (params?: ListProjectsParams, options?: RequestInit): Promise<listProjectsResponse> => {
+  
+  return apiMutator<listProjectsResponse>(getListProjectsUrl(params),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+
+
+export const getListProjectsQueryKey = (params?: ListProjectsParams,) => {
+    return [
+    `/api/v1/projects`, ...(params ? [params]: [])
+    ] as const;
+    }
+
+    
+export const getListProjectsQueryOptions = <TData = Awaited<ReturnType<typeof listProjects>>, TError = HTTPValidationError>(params?: ListProjectsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listProjects>>, TError, TData>, request?: SecondParameter<typeof apiMutator>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListProjectsQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listProjects>>> = ({ signal }) => listProjects(params, { signal, ...requestOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listProjects>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListProjectsQueryResult = NonNullable<Awaited<ReturnType<typeof listProjects>>>
+export type ListProjectsQueryError = HTTPValidationError
+
+
+/**
+ * @summary List Projects
+ */
+
+export function useListProjects<TData = Awaited<ReturnType<typeof listProjects>>, TError = HTTPValidationError>(
+ params?: ListProjectsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listProjects>>, TError, TData>, request?: SecondParameter<typeof apiMutator>}
+  
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListProjectsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * @summary Create Project
+ */
+export type createProjectResponse200 = {
+  data: EnvelopeProjectOut
+  status: 200
+}
+
+export type createProjectResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+    
+export type createProjectResponseSuccess = (createProjectResponse200) & {
+  headers: Headers;
+};
+export type createProjectResponseError = (createProjectResponse422) & {
+  headers: Headers;
+};
+
+export type createProjectResponse = (createProjectResponseSuccess | createProjectResponseError)
+
+export const getCreateProjectUrl = () => {
+
+
+  
+
+  return `/api/v1/projects`
+}
+
+export const createProject = async (projectCreateIn: ProjectCreateIn, options?: RequestInit): Promise<createProjectResponse> => {
+  
+  return apiMutator<createProjectResponse>(getCreateProjectUrl(),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      projectCreateIn,)
+  }
+);}
+
+
+
+
+export const getCreateProjectMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createProject>>, TError,{data: ProjectCreateIn}, TContext>, request?: SecondParameter<typeof apiMutator>}
+): UseMutationOptions<Awaited<ReturnType<typeof createProject>>, TError,{data: ProjectCreateIn}, TContext> => {
+
+const mutationKey = ['createProject'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createProject>>, {data: ProjectCreateIn}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createProject(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateProjectMutationResult = NonNullable<Awaited<ReturnType<typeof createProject>>>
+    export type CreateProjectMutationBody = ProjectCreateIn
+    export type CreateProjectMutationError = HTTPValidationError
+
+    /**
+ * @summary Create Project
+ */
+export const useCreateProject = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createProject>>, TError,{data: ProjectCreateIn}, TContext>, request?: SecondParameter<typeof apiMutator>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createProject>>,
+        TError,
+        {data: ProjectCreateIn},
+        TContext
+      > => {
+
+      const mutationOptions = getCreateProjectMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+    
+/**
+ * @summary Get Project
+ */
+export type getProjectResponse200 = {
+  data: EnvelopeProjectOut
+  status: 200
+}
+
+export type getProjectResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+    
+export type getProjectResponseSuccess = (getProjectResponse200) & {
+  headers: Headers;
+};
+export type getProjectResponseError = (getProjectResponse422) & {
+  headers: Headers;
+};
+
+export type getProjectResponse = (getProjectResponseSuccess | getProjectResponseError)
+
+export const getGetProjectUrl = (projectId: string,) => {
+
+
+  
+
+  return `/api/v1/projects/${projectId}`
+}
+
+export const getProject = async (projectId: string, options?: RequestInit): Promise<getProjectResponse> => {
+  
+  return apiMutator<getProjectResponse>(getGetProjectUrl(projectId),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+
+
+export const getGetProjectQueryKey = (projectId?: string,) => {
+    return [
+    `/api/v1/projects/${projectId}`
+    ] as const;
+    }
+
+    
+export const getGetProjectQueryOptions = <TData = Awaited<ReturnType<typeof getProject>>, TError = HTTPValidationError>(projectId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getProject>>, TError, TData>, request?: SecondParameter<typeof apiMutator>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetProjectQueryKey(projectId);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getProject>>> = ({ signal }) => getProject(projectId, { signal, ...requestOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(projectId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getProject>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetProjectQueryResult = NonNullable<Awaited<ReturnType<typeof getProject>>>
+export type GetProjectQueryError = HTTPValidationError
+
+
+/**
+ * @summary Get Project
+ */
+
+export function useGetProject<TData = Awaited<ReturnType<typeof getProject>>, TError = HTTPValidationError>(
+ projectId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getProject>>, TError, TData>, request?: SecondParameter<typeof apiMutator>}
+  
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetProjectQueryOptions(projectId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * @summary Update Project
+ */
+export type updateProjectResponse200 = {
+  data: EnvelopeProjectOut
+  status: 200
+}
+
+export type updateProjectResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+    
+export type updateProjectResponseSuccess = (updateProjectResponse200) & {
+  headers: Headers;
+};
+export type updateProjectResponseError = (updateProjectResponse422) & {
+  headers: Headers;
+};
+
+export type updateProjectResponse = (updateProjectResponseSuccess | updateProjectResponseError)
+
+export const getUpdateProjectUrl = (projectId: string,) => {
+
+
+  
+
+  return `/api/v1/projects/${projectId}`
+}
+
+export const updateProject = async (projectId: string,
+    projectUpdateIn: ProjectUpdateIn, options?: RequestInit): Promise<updateProjectResponse> => {
+  
+  return apiMutator<updateProjectResponse>(getUpdateProjectUrl(projectId),
+  {      
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      projectUpdateIn,)
+  }
+);}
+
+
+
+
+export const getUpdateProjectMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateProject>>, TError,{projectId: string;data: ProjectUpdateIn}, TContext>, request?: SecondParameter<typeof apiMutator>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateProject>>, TError,{projectId: string;data: ProjectUpdateIn}, TContext> => {
+
+const mutationKey = ['updateProject'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateProject>>, {projectId: string;data: ProjectUpdateIn}> = (props) => {
+          const {projectId,data} = props ?? {};
+
+          return  updateProject(projectId,data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateProjectMutationResult = NonNullable<Awaited<ReturnType<typeof updateProject>>>
+    export type UpdateProjectMutationBody = ProjectUpdateIn
+    export type UpdateProjectMutationError = HTTPValidationError
+
+    /**
+ * @summary Update Project
+ */
+export const useUpdateProject = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateProject>>, TError,{projectId: string;data: ProjectUpdateIn}, TContext>, request?: SecondParameter<typeof apiMutator>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateProject>>,
+        TError,
+        {projectId: string;data: ProjectUpdateIn},
+        TContext
+      > => {
+
+      const mutationOptions = getUpdateProjectMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+    
+/**
+ * @summary Archive Project
+ */
+export type archiveProjectResponse200 = {
+  data: EnvelopeProjectOut
+  status: 200
+}
+
+export type archiveProjectResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+    
+export type archiveProjectResponseSuccess = (archiveProjectResponse200) & {
+  headers: Headers;
+};
+export type archiveProjectResponseError = (archiveProjectResponse422) & {
+  headers: Headers;
+};
+
+export type archiveProjectResponse = (archiveProjectResponseSuccess | archiveProjectResponseError)
+
+export const getArchiveProjectUrl = (projectId: string,) => {
+
+
+  
+
+  return `/api/v1/projects/${projectId}/archive`
+}
+
+export const archiveProject = async (projectId: string, options?: RequestInit): Promise<archiveProjectResponse> => {
+  
+  return apiMutator<archiveProjectResponse>(getArchiveProjectUrl(projectId),
+  {      
+    ...options,
+    method: 'POST'
+    
+    
+  }
+);}
+
+
+
+
+export const getArchiveProjectMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof archiveProject>>, TError,{projectId: string}, TContext>, request?: SecondParameter<typeof apiMutator>}
+): UseMutationOptions<Awaited<ReturnType<typeof archiveProject>>, TError,{projectId: string}, TContext> => {
+
+const mutationKey = ['archiveProject'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof archiveProject>>, {projectId: string}> = (props) => {
+          const {projectId} = props ?? {};
+
+          return  archiveProject(projectId,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ArchiveProjectMutationResult = NonNullable<Awaited<ReturnType<typeof archiveProject>>>
+    
+    export type ArchiveProjectMutationError = HTTPValidationError
+
+    /**
+ * @summary Archive Project
+ */
+export const useArchiveProject = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof archiveProject>>, TError,{projectId: string}, TContext>, request?: SecondParameter<typeof apiMutator>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof archiveProject>>,
+        TError,
+        {projectId: string},
+        TContext
+      > => {
+
+      const mutationOptions = getArchiveProjectMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+    
+/**
+ * @summary List Project Members
+ */
+export type listProjectMembersResponse200 = {
+  data: EnvelopeListProjectMemberOut
+  status: 200
+}
+
+export type listProjectMembersResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+    
+export type listProjectMembersResponseSuccess = (listProjectMembersResponse200) & {
+  headers: Headers;
+};
+export type listProjectMembersResponseError = (listProjectMembersResponse422) & {
+  headers: Headers;
+};
+
+export type listProjectMembersResponse = (listProjectMembersResponseSuccess | listProjectMembersResponseError)
+
+export const getListProjectMembersUrl = (projectId: string,) => {
+
+
+  
+
+  return `/api/v1/projects/${projectId}/members`
+}
+
+export const listProjectMembers = async (projectId: string, options?: RequestInit): Promise<listProjectMembersResponse> => {
+  
+  return apiMutator<listProjectMembersResponse>(getListProjectMembersUrl(projectId),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+
+
+export const getListProjectMembersQueryKey = (projectId?: string,) => {
+    return [
+    `/api/v1/projects/${projectId}/members`
+    ] as const;
+    }
+
+    
+export const getListProjectMembersQueryOptions = <TData = Awaited<ReturnType<typeof listProjectMembers>>, TError = HTTPValidationError>(projectId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listProjectMembers>>, TError, TData>, request?: SecondParameter<typeof apiMutator>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListProjectMembersQueryKey(projectId);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listProjectMembers>>> = ({ signal }) => listProjectMembers(projectId, { signal, ...requestOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(projectId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listProjectMembers>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListProjectMembersQueryResult = NonNullable<Awaited<ReturnType<typeof listProjectMembers>>>
+export type ListProjectMembersQueryError = HTTPValidationError
+
+
+/**
+ * @summary List Project Members
+ */
+
+export function useListProjectMembers<TData = Awaited<ReturnType<typeof listProjectMembers>>, TError = HTTPValidationError>(
+ projectId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listProjectMembers>>, TError, TData>, request?: SecondParameter<typeof apiMutator>}
+  
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListProjectMembersQueryOptions(projectId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * @summary Add Project Member
+ */
+export type addProjectMemberResponse200 = {
+  data: EnvelopeProjectMemberOut
+  status: 200
+}
+
+export type addProjectMemberResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+    
+export type addProjectMemberResponseSuccess = (addProjectMemberResponse200) & {
+  headers: Headers;
+};
+export type addProjectMemberResponseError = (addProjectMemberResponse422) & {
+  headers: Headers;
+};
+
+export type addProjectMemberResponse = (addProjectMemberResponseSuccess | addProjectMemberResponseError)
+
+export const getAddProjectMemberUrl = (projectId: string,) => {
+
+
+  
+
+  return `/api/v1/projects/${projectId}/members`
+}
+
+export const addProjectMember = async (projectId: string,
+    projectMemberAddIn: ProjectMemberAddIn, options?: RequestInit): Promise<addProjectMemberResponse> => {
+  
+  return apiMutator<addProjectMemberResponse>(getAddProjectMemberUrl(projectId),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      projectMemberAddIn,)
+  }
+);}
+
+
+
+
+export const getAddProjectMemberMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof addProjectMember>>, TError,{projectId: string;data: ProjectMemberAddIn}, TContext>, request?: SecondParameter<typeof apiMutator>}
+): UseMutationOptions<Awaited<ReturnType<typeof addProjectMember>>, TError,{projectId: string;data: ProjectMemberAddIn}, TContext> => {
+
+const mutationKey = ['addProjectMember'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof addProjectMember>>, {projectId: string;data: ProjectMemberAddIn}> = (props) => {
+          const {projectId,data} = props ?? {};
+
+          return  addProjectMember(projectId,data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AddProjectMemberMutationResult = NonNullable<Awaited<ReturnType<typeof addProjectMember>>>
+    export type AddProjectMemberMutationBody = ProjectMemberAddIn
+    export type AddProjectMemberMutationError = HTTPValidationError
+
+    /**
+ * @summary Add Project Member
+ */
+export const useAddProjectMember = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof addProjectMember>>, TError,{projectId: string;data: ProjectMemberAddIn}, TContext>, request?: SecondParameter<typeof apiMutator>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof addProjectMember>>,
+        TError,
+        {projectId: string;data: ProjectMemberAddIn},
+        TContext
+      > => {
+
+      const mutationOptions = getAddProjectMemberMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+    
+/**
+ * @summary Update Project Member
+ */
+export type updateProjectMemberResponse200 = {
+  data: EnvelopeProjectMemberOut
+  status: 200
+}
+
+export type updateProjectMemberResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+    
+export type updateProjectMemberResponseSuccess = (updateProjectMemberResponse200) & {
+  headers: Headers;
+};
+export type updateProjectMemberResponseError = (updateProjectMemberResponse422) & {
+  headers: Headers;
+};
+
+export type updateProjectMemberResponse = (updateProjectMemberResponseSuccess | updateProjectMemberResponseError)
+
+export const getUpdateProjectMemberUrl = (projectId: string,
+    userId: string,) => {
+
+
+  
+
+  return `/api/v1/projects/${projectId}/members/${userId}`
+}
+
+export const updateProjectMember = async (projectId: string,
+    userId: string,
+    projectMemberUpdateIn: ProjectMemberUpdateIn, options?: RequestInit): Promise<updateProjectMemberResponse> => {
+  
+  return apiMutator<updateProjectMemberResponse>(getUpdateProjectMemberUrl(projectId,userId),
+  {      
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      projectMemberUpdateIn,)
+  }
+);}
+
+
+
+
+export const getUpdateProjectMemberMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateProjectMember>>, TError,{projectId: string;userId: string;data: ProjectMemberUpdateIn}, TContext>, request?: SecondParameter<typeof apiMutator>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateProjectMember>>, TError,{projectId: string;userId: string;data: ProjectMemberUpdateIn}, TContext> => {
+
+const mutationKey = ['updateProjectMember'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateProjectMember>>, {projectId: string;userId: string;data: ProjectMemberUpdateIn}> = (props) => {
+          const {projectId,userId,data} = props ?? {};
+
+          return  updateProjectMember(projectId,userId,data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateProjectMemberMutationResult = NonNullable<Awaited<ReturnType<typeof updateProjectMember>>>
+    export type UpdateProjectMemberMutationBody = ProjectMemberUpdateIn
+    export type UpdateProjectMemberMutationError = HTTPValidationError
+
+    /**
+ * @summary Update Project Member
+ */
+export const useUpdateProjectMember = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateProjectMember>>, TError,{projectId: string;userId: string;data: ProjectMemberUpdateIn}, TContext>, request?: SecondParameter<typeof apiMutator>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateProjectMember>>,
+        TError,
+        {projectId: string;userId: string;data: ProjectMemberUpdateIn},
+        TContext
+      > => {
+
+      const mutationOptions = getUpdateProjectMemberMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+    
+/**
+ * @summary Remove Project Member
+ */
+export type removeProjectMemberResponse200 = {
+  data: EnvelopeNoneType
+  status: 200
+}
+
+export type removeProjectMemberResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+    
+export type removeProjectMemberResponseSuccess = (removeProjectMemberResponse200) & {
+  headers: Headers;
+};
+export type removeProjectMemberResponseError = (removeProjectMemberResponse422) & {
+  headers: Headers;
+};
+
+export type removeProjectMemberResponse = (removeProjectMemberResponseSuccess | removeProjectMemberResponseError)
+
+export const getRemoveProjectMemberUrl = (projectId: string,
+    userId: string,) => {
+
+
+  
+
+  return `/api/v1/projects/${projectId}/members/${userId}`
+}
+
+export const removeProjectMember = async (projectId: string,
+    userId: string, options?: RequestInit): Promise<removeProjectMemberResponse> => {
+  
+  return apiMutator<removeProjectMemberResponse>(getRemoveProjectMemberUrl(projectId,userId),
+  {      
+    ...options,
+    method: 'DELETE'
+    
+    
+  }
+);}
+
+
+
+
+export const getRemoveProjectMemberMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof removeProjectMember>>, TError,{projectId: string;userId: string}, TContext>, request?: SecondParameter<typeof apiMutator>}
+): UseMutationOptions<Awaited<ReturnType<typeof removeProjectMember>>, TError,{projectId: string;userId: string}, TContext> => {
+
+const mutationKey = ['removeProjectMember'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof removeProjectMember>>, {projectId: string;userId: string}> = (props) => {
+          const {projectId,userId} = props ?? {};
+
+          return  removeProjectMember(projectId,userId,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RemoveProjectMemberMutationResult = NonNullable<Awaited<ReturnType<typeof removeProjectMember>>>
+    
+    export type RemoveProjectMemberMutationError = HTTPValidationError
+
+    /**
+ * @summary Remove Project Member
+ */
+export const useRemoveProjectMember = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof removeProjectMember>>, TError,{projectId: string;userId: string}, TContext>, request?: SecondParameter<typeof apiMutator>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof removeProjectMember>>,
+        TError,
+        {projectId: string;userId: string},
+        TContext
+      > => {
+
+      const mutationOptions = getRemoveProjectMemberMutationOptions(options);
 
       return useMutation(mutationOptions);
     }
