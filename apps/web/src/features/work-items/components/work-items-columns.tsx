@@ -1,29 +1,14 @@
 import type { ColumnDef } from '@tanstack/react-table'
-import type { WorkItemOut, WorkItemPriority, WorkItemStatus } from '@worknexus/contracts'
+import type { WorkItemOut } from '@worknexus/contracts'
 
-import { Badge } from '@/components/ui/badge'
+import { PriorityBadge, StatusBadge, TypeBadge } from '@/features/work-items/components/work-item-badges'
 import { formatDateTime } from '@/lib/datetime'
 import type { AppTFunction } from '@/locales/i18n'
 
-type BadgeVariant = 'default' | 'secondary' | 'outline' | 'success' | 'warning' | 'error'
-
-const statusVariant: Record<WorkItemStatus, BadgeVariant> = {
-  backlog: 'secondary',
-  todo: 'outline',
-  in_progress: 'default',
-  review: 'warning',
-  done: 'success',
-  cancelled: 'secondary',
-}
-
-const priorityVariant: Record<WorkItemPriority, BadgeVariant> = {
-  low: 'secondary',
-  medium: 'outline',
-  high: 'warning',
-  urgent: 'error',
-}
-
-export function workItemColumns(t: AppTFunction): ColumnDef<WorkItemOut, unknown>[] {
+export function workItemColumns(
+  t: AppTFunction,
+  onSelect: (id: string) => void,
+): ColumnDef<WorkItemOut, unknown>[] {
   return [
     {
       accessorKey: 'key',
@@ -33,28 +18,30 @@ export function workItemColumns(t: AppTFunction): ColumnDef<WorkItemOut, unknown
     {
       accessorKey: 'type',
       header: t('workItems:columns.type'),
-      cell: ({ row }) => <Badge variant="outline">{t(`workItems:type.${row.original.type}`)}</Badge>,
+      cell: ({ row }) => <TypeBadge type={row.original.type} />,
     },
     {
       accessorKey: 'title',
       header: t('workItems:columns.title'),
-      cell: ({ row }) => <span className="font-medium text-text-primary">{row.original.title}</span>,
+      cell: ({ row }) => (
+        <button
+          type="button"
+          onClick={() => onSelect(row.original.id)}
+          className="text-left font-medium text-text-primary hover:underline"
+        >
+          {row.original.title}
+        </button>
+      ),
     },
     {
       accessorKey: 'status',
       header: t('workItems:columns.status'),
-      cell: ({ row }) => (
-        <Badge variant={statusVariant[row.original.status]}>{t(`workItems:status.${row.original.status}`)}</Badge>
-      ),
+      cell: ({ row }) => <StatusBadge status={row.original.status} />,
     },
     {
       accessorKey: 'priority',
       header: t('workItems:columns.priority'),
-      cell: ({ row }) => (
-        <Badge variant={priorityVariant[row.original.priority]}>
-          {t(`workItems:priority.${row.original.priority}`)}
-        </Badge>
-      ),
+      cell: ({ row }) => <PriorityBadge priority={row.original.priority} />,
     },
     {
       accessorKey: 'assignee',

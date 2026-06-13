@@ -14,7 +14,9 @@ import {
   WORK_ITEM_STATUSES,
   WORK_ITEM_TYPES,
 } from '@/features/work-items/api/schemas'
+import { useProjectMembersQuery } from '@/features/work-items/api/use-project-members-query'
 import { useWorkItemsQuery } from '@/features/work-items/api/use-work-items-query'
+import { WorkItemDrawer } from '@/features/work-items/components/work-item-drawer'
 import { workItemColumns } from '@/features/work-items/components/work-items-columns'
 import { WorkItemFormDialog } from '@/features/work-items/components/work-item-form-dialog'
 import { PermissionGate } from '@/lib/auth/permission-gate'
@@ -32,14 +34,18 @@ export function WorkItemsPage() {
   const [status, setStatus] = useState<WorkItemStatus | ''>('')
   const [type, setType] = useState<WorkItemType | ''>('')
   const [priority, setPriority] = useState<WorkItemPriority | ''>('')
+  const [assigneeId, setAssigneeId] = useState('')
   const [createOpen, setCreateOpen] = useState(false)
+  const [selectedId, setSelectedId] = useState<string | null>(null)
 
+  const membersQuery = useProjectMembersQuery(projectId)
   const query = useWorkItemsQuery(projectId, {
     page,
     page_size: PAGE_SIZE,
     status: status || undefined,
     type: type || undefined,
     priority: priority || undefined,
+    assignee_id: assigneeId || undefined,
   })
 
   return (
@@ -107,6 +113,21 @@ export function WorkItemsPage() {
             </option>
           ))}
         </select>
+        <select
+          className={filterClassName}
+          value={assigneeId}
+          onChange={(event) => {
+            setAssigneeId(event.target.value)
+            setPage(1)
+          }}
+        >
+          <option value="">{t('workItems:filter.allAssignee')}</option>
+          {(membersQuery.data ?? []).map((member) => (
+            <option key={member.userId} value={member.userId}>
+              {member.displayName}
+            </option>
+          ))}
+        </select>
       </div>
 
       {query.isPending ? (
@@ -116,7 +137,7 @@ export function WorkItemsPage() {
       ) : (
         <>
           <DataTable
-            columns={workItemColumns(t)}
+            columns={workItemColumns(t, setSelectedId)}
             data={query.data.items}
             emptyState={<EmptyState description={t('workItems:empty')} />}
           />
@@ -143,6 +164,7 @@ export function WorkItemsPage() {
       )}
 
       <WorkItemFormDialog open={createOpen} onOpenChange={setCreateOpen} projectId={projectId} />
+      <WorkItemDrawer projectId={projectId} workItemId={selectedId} onClose={() => setSelectedId(null)} />
     </div>
   )
 }
