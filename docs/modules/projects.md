@@ -1,6 +1,6 @@
 # 模块：projects（项目空间）
 
-> 状态：开发中（PR1 后端已交付，PR2 前端待开发）
+> 状态：已上线
 > 负责人：dxl
 > 关联 feature（前端）：`apps/web/src/features/projects`
 > 关联 module（后端）：`apps/server/src/worknexus/modules/projects`（成员写入复用 `modules/identity`）
@@ -105,3 +105,4 @@ i18n namespace：`projects`（zh-CN / en-US 同步提供）。
 | 日期 | PR | 变更摘要 |
 | --- | --- | --- |
 | 2026-06-13 | PR1（后端） | 项目 CRUD/归档 + 成员管理：5xxx 错误码、`AuditAction.project.*`；`projects.schemas`（ProjectStatus/ProjectMemberRole/ProjectCreate/Update/Out、ProjectMember\* schema）；`projects.service`（`insert_project` 建块 + `create_project`/`get_project_detail`/`list_projects`(可见性复用 build_current_user_context 规则)/`update_project`/`archive_project`，batched owner/memberCount 防 N+1）；`identity.service` 新增成员管理（list/add/update_role/remove，唯一写 project_members + 审计，校验 owner/重复/非成员）；`projects.router` 9 端点（列表仅认证 + 过滤，其余 project_param 权限）+ api.py 注册；`tests/test_projects_api.py` 15 例全绿。**无 Alembic 迁移。** |
+| 2026-06-13 | PR2（前端） | `features/projects`：列表页（状态过滤 active/archived + 分页 + 创建）、概览页（基础信息 + 编辑/归档 + 成员管理 section）、成员管理（DataTable + 添加成员 Dialog + 行内角色 Select + 移除 ConfirmDialog）；Key Factory + query/mutation hooks（contracts 解包 `unwrap`，错误内联 5001 映射 i18n，create/update/archive 同时失效 me query 使派生的 `/me.projects` 与权限同步）；`projects` i18n namespace（zh/en）；`lib/paths` + router + AppShell 导航；vitest 5 例（list query + schema 校验）；E2E `projects.spec.ts`（创建项目→添加成员→改角色→移除，workers=1 串行）。复用既有原生 styled select / DataTable / ConfirmDialog / PermissionGate 模式，未新增写法手册条目。 |
