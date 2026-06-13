@@ -10,6 +10,11 @@ from worknexus.db import get_db
 from worknexus.modules.work_items import service
 from worknexus.modules.work_items.deps import require_work_item_permission
 from worknexus.modules.work_items.schemas import (
+    ActivityOut,
+    CommentCreateIn,
+    CommentOut,
+    RelationCreateIn,
+    RelationOut,
     WorkItemCreateIn,
     WorkItemOut,
     WorkItemPriority,
@@ -96,3 +101,61 @@ async def transition_work_item(
     subject: Annotated[Subject, Depends(require_work_item_permission(Permission.WORK_ITEM_TRANSITION))],
 ) -> Envelope[WorkItemOut]:
     return Envelope(data=await service.transition_work_item(db, subject.actor, work_item_id, payload))
+
+
+@router.get("/work-items/{work_item_id}/comments", operation_id="list_work_item_comments")
+async def list_work_item_comments(
+    work_item_id: str,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    subject: Annotated[Subject, Depends(require_work_item_permission(Permission.WORK_ITEM_READ))],
+) -> Envelope[list[CommentOut]]:
+    return Envelope(data=await service.list_comments(db, subject.actor, work_item_id))
+
+
+@router.post("/work-items/{work_item_id}/comments", operation_id="create_work_item_comment")
+async def create_work_item_comment(
+    work_item_id: str,
+    payload: CommentCreateIn,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    subject: Annotated[Subject, Depends(require_work_item_permission(Permission.WORK_ITEM_COMMENT))],
+) -> Envelope[CommentOut]:
+    return Envelope(data=await service.create_comment(db, subject.actor, work_item_id, payload))
+
+
+@router.get("/work-items/{work_item_id}/activities", operation_id="list_work_item_activities")
+async def list_work_item_activities(
+    work_item_id: str,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    subject: Annotated[Subject, Depends(require_work_item_permission(Permission.WORK_ITEM_READ))],
+) -> Envelope[list[ActivityOut]]:
+    return Envelope(data=await service.list_activities(db, subject.actor, work_item_id))
+
+
+@router.get("/work-items/{work_item_id}/relations", operation_id="list_work_item_relations")
+async def list_work_item_relations(
+    work_item_id: str,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    subject: Annotated[Subject, Depends(require_work_item_permission(Permission.WORK_ITEM_READ))],
+) -> Envelope[list[RelationOut]]:
+    return Envelope(data=await service.list_relations(db, subject.actor, work_item_id))
+
+
+@router.post("/work-items/{work_item_id}/relations", operation_id="create_work_item_relation")
+async def create_work_item_relation(
+    work_item_id: str,
+    payload: RelationCreateIn,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    subject: Annotated[Subject, Depends(require_work_item_permission(Permission.WORK_ITEM_UPDATE))],
+) -> Envelope[RelationOut]:
+    return Envelope(data=await service.create_relation(db, subject.actor, work_item_id, payload))
+
+
+@router.delete("/work-items/{work_item_id}/relations/{relation_id}", operation_id="delete_work_item_relation")
+async def delete_work_item_relation(
+    work_item_id: str,
+    relation_id: str,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    subject: Annotated[Subject, Depends(require_work_item_permission(Permission.WORK_ITEM_UPDATE))],
+) -> Envelope[None]:
+    await service.delete_relation(db, subject.actor, work_item_id, relation_id)
+    return Envelope()

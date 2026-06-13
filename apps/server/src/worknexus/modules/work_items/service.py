@@ -6,7 +6,7 @@ from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from worknexus.core.access import ScopeType, SubjectType
-from worknexus.core.deps import Actor
+from worknexus.core.deps import Actor, ActorType
 from worknexus.core.errors import BizError, ErrorCode
 from worknexus.core.pagination import PageParams
 from worknexus.modules.audit import service as audit
@@ -15,11 +15,21 @@ from worknexus.modules.identity.models import ProjectMember, RoleBinding, User
 from worknexus.modules.projects import service as projects_service
 from worknexus.modules.projects.models import Project
 from worknexus.modules.projects.schemas import ProjectStatus, UserBriefOut
-from worknexus.modules.work_items.models import WorkItem, WorkItemActivity
+from worknexus.modules.work_items.models import WorkItem, WorkItemActivity, WorkItemComment, WorkItemRelation
 from worknexus.modules.work_items.schemas import (
     ALLOWED_TRANSITIONS,
     CUSTOM_FIELD_SCHEMAS,
+    MANUAL_RELATION_TYPES,
     ActivityAction,
+    ActivityOut,
+    CommentAuthorType,
+    CommentCreateIn,
+    CommentOut,
+    RelationCreateIn,
+    RelationDirection,
+    RelationOut,
+    RelationType,
+    WorkItemBriefOut,
     WorkItemCreateIn,
     WorkItemOut,
     WorkItemPriority,
@@ -386,5 +396,248 @@ async def delete_work_item(db: AsyncSession, actor: Actor, work_item_id: str) ->
         resource_id=item.id,
         project_id=item.project_id,
         before={"key": item.key, "title": item.title},
+    )
+    await db.commit()
+
+
+# --- comments ---
+
+
+async def _users_by_ids(db: AsyncSession, ids: set[str]) -> dict[str, User]:
+    if not ids:
+        return {}
+    rows = (await db.execute(select(User).where(User.id.in_(ids)))).scalars().all()
+    return {u.id: u for u in rows}
+
+
+def _comment_out(comment: WorkItemComment, author: User | None) -> CommentOut:
+    return CommentOut(
+        id=comment.id,
+        work_item_id=comment.work_item_id,
+        author_type=CommentAuthorType(comment.author_type),
+        author_id=comment.author_id,
+        author=UserBriefOut.model_validate(author) if author is not None else None,
+        body=comment.body,
+        created_at=comment.created_at,
+    )
+
+
+async def list_comments(db: AsyncSession, actor: Actor, work_item_id: str) -> list[CommentOut]:
+    await get_work_item(db, work_item_id, actor.tenant_id)
+    rows = (
+        (
+            await db.execute(
+                select(WorkItemComment)
+                .where(WorkItemComment.work_item_id == work_item_id)
+                .order_by(WorkItemComment.created_at)
+            )
+        )
+        .scalars()
+        .all()
+    )
+    users = await _users_by_ids(
+        db, {c.author_id for c in rows if c.author_id and c.author_type == CommentAuthorType.USER}
+    )
+    return [_comment_out(c, users.get(c.author_id) if c.author_id else None) for c in rows]
+
+
+async def create_comment(db: AsyncSession, actor: Actor, work_item_id: str, data: CommentCreateIn) -> CommentOut:
+    item = await get_work_item(db, work_item_id, actor.tenant_id)
+    await ensure_project_writable(db, item.project_id, actor.tenant_id)
+    comment = WorkItemComment(
+        tenant_id=actor.tenant_id,
+        work_item_id=work_item_id,
+        author_type=actor.type,
+        author_id=actor.id,
+        body=data.body,
+    )
+    db.add(comment)
+    await db.flush()
+    await _record_activity(db, actor, work_item_id, ActivityAction.COMMENTED, after={"comment_id": comment.id})
+    await audit.record(
+        db,
+        actor,
+        action=AuditAction.WORK_ITEM_COMMENT,
+        resource_type="work_item",
+        resource_id=work_item_id,
+        project_id=item.project_id,
+        after={"comment_id": comment.id},
+    )
+    await db.commit()
+    author = await db.get(User, actor.id) if actor.type == ActorType.USER else None
+    return _comment_out(comment, author)
+
+
+# --- activities ---
+
+
+def _activity_out(activity: WorkItemActivity, actor_user: User | None) -> ActivityOut:
+    return ActivityOut(
+        id=activity.id,
+        work_item_id=activity.work_item_id,
+        actor_type=activity.actor_type,
+        actor_id=activity.actor_id,
+        actor=UserBriefOut.model_validate(actor_user) if actor_user is not None else None,
+        action=ActivityAction(activity.action),
+        field=activity.field,
+        before=activity.before,
+        after=activity.after,
+        created_at=activity.created_at,
+    )
+
+
+async def list_activities(db: AsyncSession, actor: Actor, work_item_id: str) -> list[ActivityOut]:
+    await get_work_item(db, work_item_id, actor.tenant_id)
+    rows = (
+        (
+            await db.execute(
+                select(WorkItemActivity)
+                .where(WorkItemActivity.work_item_id == work_item_id)
+                .order_by(WorkItemActivity.created_at)
+            )
+        )
+        .scalars()
+        .all()
+    )
+    users = await _users_by_ids(db, {a.actor_id for a in rows if a.actor_id and a.actor_type == ActorType.USER})
+    return [_activity_out(a, users.get(a.actor_id) if a.actor_id else None) for a in rows]
+
+
+# --- relations ---
+
+
+def _brief(item: WorkItem) -> WorkItemBriefOut:
+    return WorkItemBriefOut(
+        id=item.id,
+        key=item.key,
+        title=item.title,
+        type=WorkItemType(item.type),
+        status=WorkItemStatus(item.status),
+    )
+
+
+async def _work_items_by_ids(db: AsyncSession, ids: set[str]) -> dict[str, WorkItem]:
+    if not ids:
+        return {}
+    rows = (await db.execute(select(WorkItem).where(WorkItem.id.in_(ids)))).scalars().all()
+    return {w.id: w for w in rows}
+
+
+async def list_relations(db: AsyncSession, actor: Actor, work_item_id: str) -> list[RelationOut]:
+    await get_work_item(db, work_item_id, actor.tenant_id)
+    rows = (
+        (
+            await db.execute(
+                select(WorkItemRelation)
+                .where(
+                    (WorkItemRelation.source_work_item_id == work_item_id)
+                    | (WorkItemRelation.target_work_item_id == work_item_id)
+                )
+                .order_by(WorkItemRelation.created_at)
+            )
+        )
+        .scalars()
+        .all()
+    )
+    other_ids = {
+        r.target_work_item_id if r.source_work_item_id == work_item_id else r.source_work_item_id for r in rows
+    }
+    others = await _work_items_by_ids(db, other_ids)
+    out: list[RelationOut] = []
+    for r in rows:
+        if r.source_work_item_id == work_item_id:
+            direction = RelationDirection.OUTGOING
+            other = others.get(r.target_work_item_id)
+        else:
+            direction = RelationDirection.INCOMING
+            other = others.get(r.source_work_item_id)
+        # Skip relations whose other end was soft-deleted.
+        if other is None or other.deleted_at is not None:
+            continue
+        out.append(
+            RelationOut(
+                id=r.id, type=RelationType(r.type), direction=direction, related=_brief(other), created_at=r.created_at
+            )
+        )
+    return out
+
+
+async def create_relation(db: AsyncSession, actor: Actor, work_item_id: str, data: RelationCreateIn) -> RelationOut:
+    source = await get_work_item(db, work_item_id, actor.tenant_id)
+    await ensure_project_writable(db, source.project_id, actor.tenant_id)
+    if data.type not in MANUAL_RELATION_TYPES:
+        raise BizError(ErrorCode.INVALID_RELATION, "this relation type cannot be created manually")
+    if data.target_work_item_id == work_item_id:
+        raise BizError(ErrorCode.INVALID_RELATION, "cannot relate a work item to itself")
+    target = await get_work_item(db, data.target_work_item_id, actor.tenant_id)
+    if target.project_id != source.project_id:
+        raise BizError(ErrorCode.INVALID_RELATION, "related work items must be in the same project")
+    existing = (
+        await db.execute(
+            select(WorkItemRelation.id).where(
+                WorkItemRelation.source_work_item_id == work_item_id,
+                WorkItemRelation.target_work_item_id == data.target_work_item_id,
+                WorkItemRelation.type == data.type,
+            )
+        )
+    ).first()
+    if existing is not None:
+        raise BizError(ErrorCode.RELATION_ALREADY_EXISTS, "this relation already exists")
+    relation = WorkItemRelation(
+        tenant_id=actor.tenant_id,
+        source_work_item_id=work_item_id,
+        target_work_item_id=data.target_work_item_id,
+        type=data.type,
+        created_by=actor.id,
+    )
+    db.add(relation)
+    await db.flush()
+    detail = {"type": str(data.type), "target": data.target_work_item_id}
+    await _record_activity(db, actor, work_item_id, ActivityAction.RELATION_ADDED, field="relation", after=detail)
+    await audit.record(
+        db,
+        actor,
+        action=AuditAction.WORK_ITEM_RELATION_ADD,
+        resource_type="work_item",
+        resource_id=work_item_id,
+        project_id=source.project_id,
+        after=detail,
+    )
+    await db.commit()
+    return RelationOut(
+        id=relation.id,
+        type=RelationType(relation.type),
+        direction=RelationDirection.OUTGOING,
+        related=_brief(target),
+        created_at=relation.created_at,
+    )
+
+
+async def delete_relation(db: AsyncSession, actor: Actor, work_item_id: str, relation_id: str) -> None:
+    source = await get_work_item(db, work_item_id, actor.tenant_id)
+    relation = await db.get(WorkItemRelation, relation_id)
+    if (
+        relation is None
+        or relation.tenant_id != actor.tenant_id
+        or work_item_id not in (relation.source_work_item_id, relation.target_work_item_id)
+    ):
+        raise BizError(ErrorCode.RELATION_NOT_FOUND, "relation not found")
+    await ensure_project_writable(db, source.project_id, actor.tenant_id)
+    detail = {
+        "type": relation.type,
+        "source": relation.source_work_item_id,
+        "target": relation.target_work_item_id,
+    }
+    await db.delete(relation)
+    await db.flush()
+    await _record_activity(db, actor, work_item_id, ActivityAction.RELATION_REMOVED, field="relation", before=detail)
+    await audit.record(
+        db,
+        actor,
+        action=AuditAction.WORK_ITEM_RELATION_REMOVE,
+        resource_type="work_item",
+        resource_id=work_item_id,
+        project_id=source.project_id,
+        before=detail,
     )
     await db.commit()

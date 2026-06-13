@@ -53,6 +53,18 @@ class RelationType(StrEnum):
     CREATED_FROM_INTAKE = "created_from_intake"
 
 
+# Relations a user may create directly in M3 (blocked_by is shown as the inverse of blocks;
+# created_from_* are written by the M5/M6 system flows, not by hand).
+MANUAL_RELATION_TYPES = frozenset(
+    {RelationType.PARENT_CHILD, RelationType.BLOCKS, RelationType.RELATES_TO, RelationType.DUPLICATES}
+)
+
+
+class RelationDirection(StrEnum):
+    OUTGOING = "outgoing"
+    INCOMING = "incoming"
+
+
 class ActivityAction(StrEnum):
     CREATED = "created"
     TITLE_CHANGED = "title_changed"
@@ -203,3 +215,51 @@ class WorkItemOut(ApiModel):
     updated_by: str | None
     created_at: datetime
     updated_at: datetime
+
+
+class WorkItemBriefOut(ApiModel):
+    id: str
+    key: str
+    title: str
+    type: WorkItemType
+    status: WorkItemStatus
+
+
+class CommentCreateIn(ApiModel):
+    body: str = Field(min_length=1)
+
+
+class CommentOut(ApiModel):
+    id: str
+    work_item_id: str
+    author_type: CommentAuthorType
+    author_id: str | None
+    author: UserBriefOut | None
+    body: str
+    created_at: datetime
+
+
+class ActivityOut(ApiModel):
+    id: str
+    work_item_id: str
+    actor_type: str
+    actor_id: str | None
+    actor: UserBriefOut | None
+    action: ActivityAction
+    field: str | None
+    before: dict[str, Any] | None
+    after: dict[str, Any] | None
+    created_at: datetime
+
+
+class RelationCreateIn(ApiModel):
+    type: RelationType
+    target_work_item_id: str
+
+
+class RelationOut(ApiModel):
+    id: str
+    type: RelationType
+    direction: RelationDirection
+    related: WorkItemBriefOut
+    created_at: datetime

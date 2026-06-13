@@ -124,7 +124,8 @@ cancelled   → {}                               # 终态
 | POST | `/api/v1/work-items/{id}/transition` | 状态流转 | `work_item.transition` |
 | GET/POST | `/api/v1/work-items/{id}/comments` | 评论列表/新增 | `work_item.read` / `work_item.comment` |
 | GET | `/api/v1/work-items/{id}/activities` | 活动时间线 | `work_item.read` |
-| POST | `/api/v1/work-items/{id}/relations` | 新建关系（4 类手动） | `work_item.update` |
+| GET | `/api/v1/work-items/{id}/relations` | 关系列表（含 incoming/outgoing 方向 + 对端 brief；规格书 §3 外新增，详情抽屉需要） | `work_item.read` |
+| POST | `/api/v1/work-items/{id}/relations` | 新建关系（4 类手动；同项目、非自链、去重） | `work_item.update` |
 | DELETE | `/api/v1/work-items/{id}/relations/{relation_id}` | 删关系 | `work_item.update` |
 | GET | `/api/v1/projects/{project_id}/summary` | 项目概览统计（M2 推迟字段） | `work_item.read` / `project.read`（project_param） |
 
@@ -218,3 +219,4 @@ viewer 项目内只读。校验唯一入口 `core/access.py`。
 | --- | --- | --- |
 | 2026-06-13 | （设计） | 初版设计：4 张表 + projects.work_item_seq；持久化 key（项目内 seq 原子自增）；8 类型/固定状态机/custom_fields 后端轻校验；服务层三铁律（source server 派生、assignee/reporter 校验、归档写阻断）；2xxx 错误码；REST + 平铺端点工作项权限依赖；6 个 MCP 工具（low_write/read）复用 verify_delegation_token；GET /projects/{id}/summary；前端 List + 看板(@dnd-kit) + WorkItemDrawer(Sheet) + react-markdown/dompurify；6 PR 拆分；对照 Plane Issues |
 | 2026-06-13 | PR1（后端核心） | 4 张表模型 + projects.work_item_seq 列 + Alembic 迁移（35d6bb78933b，FK CASCADE / (project_id,seq)·(project_id,key) 唯一 / no_self_relation CHECK / seq 列默认 0）；schemas（5 枚举 + ALLOWED_TRANSITIONS + 8 类型 custom_fields 模型 extra=forbid + In/Out）；service（key 原子自增 `UPDATE…RETURNING`、create/get/list(筛选+排序)/update/delete[软删]/transition，活动+审计双日志，validate_custom_fields/ensure_project_writable/_ensure_assignable 三铁律，批量加载 assignee 防 N+1）；deps.require_work_item_permission（平铺端点项目作用域）；REST 6 端点 + api.py 注册；errors 2001–2009；AuditAction work_item.*；9 个测试（key 自增/状态机/双日志/软删/custom_fields/assignee/归档阻断/viewer 403/非成员 403）全绿，累计 90 passed；ruff/mypy/alembic upgrade head 通过 |
+| 2026-06-13 | PR2（评论/活动/关系） | schemas 增 CommentCreateIn/CommentOut、ActivityOut、RelationCreateIn/RelationOut/WorkItemBriefOut/RelationDirection + MANUAL_RELATION_TYPES（parent_child/blocks/relates_to/duplicates）；service 增 list/create_comment（Markdown，author=actor.type，活动+审计）、list_activities（按 actor 批量加载 user）、list/create/delete_relation（同项目+非自链+去重，incoming/outgoing 方向，软删对端跳过）；REST 增 6 端点（comments GET/POST、activities GET、relations GET/POST/DELETE）；无迁移；4 个测试（评论增列、活动时间线、关系全生命周期、关系拒绝自链/非手动类型/跨项目）全绿，累计 94 passed |
