@@ -297,6 +297,7 @@ Tailwind 4 CSS-first，单一真相源在 `styles/globals.css`：
 | 组件变体 | class-variance-authority（cva） | 0.7.x |
 | 命令面板 | cmdk | 1.1.x |
 | Markdown 渲染 | react-markdown + dompurify | 10.x / 3.x |
+| 看板拖拽 | @dnd-kit/core | 6.3.x |
 | 测试 API mock | msw | 2.14.x |
 
 场景唯一写法：
@@ -320,6 +321,7 @@ Tailwind 4 CSS-first，单一真相源在 `styles/globals.css`：
 | 路由守卫 | `features/auth` 的 `RequireAuth`（受保护区）与 `GuestOnly`（login/setup）布局路由；禁止在页面组件内写跳转守卫逻辑 |
 | 契约响应解包 | orval 生成的 client 函数返回 `{ data: Envelope, status }`，一律经 `lib/api-client.ts` 的 `unwrap()` 取 payload；禁止手写 `.data.data` 链 |
 | AI / Markdown 内容渲染 | 一律经 `lib/markdown.tsx` 的 `Markdown` 组件（react-markdown 渲染 + DOMPurify 先 sanitize 源串、不启用 rehype-raw）；**禁止 `dangerouslySetInnerHTML` 直插**（§7.7 模型输出按不可信输入处理） |
+| 看板拖拽 | @dnd-kit（`DndContext` + `useDraggable`/`useDroppable`）；放置到新状态列即调 transition mutation 落库，非法流转由后端 2002 拒绝并 toast；禁止手写 HTML5 `draggable` 事件 |
 
 ### 5.6 后端统一写法手册
 
