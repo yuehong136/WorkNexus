@@ -56,6 +56,16 @@ export default {
     archiveDescription: '确定归档「{{name}}」吗？归档后将从默认列表中隐藏。',
     archived: '项目已归档',
     notFound: '项目不存在或无权访问',
+    workItems: '工作项',
+  },
+  summary: {
+    title: '工作项概览',
+    total: '工作项数',
+    highPriority: '高优先级',
+    overdue: '逾期',
+    aiCreated: 'AI 创建',
+    recentActivity: '最近活动',
+    noActivity: '暂无活动',
   },
   members: {
     title: '成员',

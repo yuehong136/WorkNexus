@@ -11,4 +11,5 @@ export const projectKeys = {
   list: (params: ProjectsListQuery) => [...projectKeys.all, 'list', params] as const,
   detail: (id: string) => [...projectKeys.all, 'detail', id] as const,
   members: (id: string) => [...projectKeys.all, 'members', id] as const,
+  summary: (id: string) => [...projectKeys.all, 'summary', id] as const,
 }

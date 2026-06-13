@@ -58,6 +58,16 @@ export default {
     archiveDescription: 'Archive "{{name}}"? It will be hidden from the default list.',
     archived: 'Project archived',
     notFound: 'Project not found or access denied',
+    workItems: 'Work items',
+  },
+  summary: {
+    title: 'Work item overview',
+    total: 'Work items',
+    highPriority: 'High priority',
+    overdue: 'Overdue',
+    aiCreated: 'AI created',
+    recentActivity: 'Recent activity',
+    noActivity: 'No activity yet',
   },
   members: {
     title: 'Members',
