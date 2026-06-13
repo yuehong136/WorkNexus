@@ -263,3 +263,23 @@ class RelationOut(ApiModel):
     direction: RelationDirection
     related: WorkItemBriefOut
     created_at: datetime
+
+
+class ProjectActivityOut(ApiModel):
+    id: str
+    work_item_id: str
+    work_item_key: str
+    work_item_title: str
+    action: ActivityAction
+    actor_type: str
+    actor_id: str | None
+    created_at: datetime
+
+
+class ProjectSummaryOut(ApiModel):
+    total_count: int
+    status_counts: dict[str, int]
+    high_priority_count: int
+    overdue_count: int
+    ai_created_count: int
+    recent_activities: list[ProjectActivityOut]

@@ -25,6 +25,8 @@ from worknexus.modules.work_items.schemas import (
     CommentAuthorType,
     CommentCreateIn,
     CommentOut,
+    ProjectActivityOut,
+    ProjectSummaryOut,
     RelationCreateIn,
     RelationDirection,
     RelationOut,
@@ -641,3 +643,81 @@ async def delete_relation(db: AsyncSession, actor: Actor, work_item_id: str, rel
         before=detail,
     )
     await db.commit()
+
+
+# --- project summary (backfills the project-overview stats deferred from M2) ---
+
+
+async def get_project_summary(db: AsyncSession, actor: Actor, project_id: str) -> ProjectSummaryOut:
+    await projects_service.get_project(db, project_id, actor.tenant_id)
+    conds = (
+        WorkItem.tenant_id == actor.tenant_id,
+        WorkItem.project_id == project_id,
+        WorkItem.deleted_at.is_(None),
+    )
+    status_rows = (
+        await db.execute(select(WorkItem.status, func.count()).where(*conds).group_by(WorkItem.status))
+    ).all()
+    status_counts = {str(s): 0 for s in WorkItemStatus}
+    for status, count in status_rows:
+        status_counts[status] = count
+    high_priority_count = (
+        await db.execute(
+            select(func.count())
+            .select_from(WorkItem)
+            .where(*conds, WorkItem.priority.in_([WorkItemPriority.HIGH, WorkItemPriority.URGENT]))
+        )
+    ).scalar_one()
+    overdue_count = (
+        await db.execute(
+            select(func.count())
+            .select_from(WorkItem)
+            .where(
+                *conds,
+                WorkItem.due_at.is_not(None),
+                WorkItem.due_at < _now(),
+                WorkItem.status.not_in([WorkItemStatus.DONE, WorkItemStatus.CANCELLED]),
+            )
+        )
+    ).scalar_one()
+    ai_created_count = (
+        await db.execute(
+            select(func.count())
+            .select_from(WorkItem)
+            .where(*conds, WorkItem.source.in_([WorkItemSource.AI_CHAT, WorkItemSource.MCP]))
+        )
+    ).scalar_one()
+    recent_rows = (
+        await db.execute(
+            select(WorkItemActivity, WorkItem.key, WorkItem.title)
+            .join(WorkItem, WorkItem.id == WorkItemActivity.work_item_id)
+            .where(
+                WorkItem.tenant_id == actor.tenant_id,
+                WorkItem.project_id == project_id,
+                WorkItem.deleted_at.is_(None),
+            )
+            .order_by(WorkItemActivity.created_at.desc())
+            .limit(5)
+        )
+    ).all()
+    recent = [
+        ProjectActivityOut(
+            id=activity.id,
+            work_item_id=activity.work_item_id,
+            work_item_key=key,
+            work_item_title=title,
+            action=ActivityAction(activity.action),
+            actor_type=activity.actor_type,
+            actor_id=activity.actor_id,
+            created_at=activity.created_at,
+        )
+        for activity, key, title in recent_rows
+    ]
+    return ProjectSummaryOut(
+        total_count=sum(status_counts.values()),
+        status_counts=status_counts,
+        high_priority_count=high_priority_count,
+        overdue_count=overdue_count,
+        ai_created_count=ai_created_count,
+        recent_activities=recent,
+    )

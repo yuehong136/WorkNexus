@@ -14,7 +14,7 @@ from worknexus.modules.identity import service as identity_service
 from worknexus.modules.identity.models import ProjectMember, User
 from worknexus.modules.work_items import service
 from worknexus.modules.work_items.models import WorkItemActivity
-from worknexus.modules.work_items.schemas import WorkItemCreateIn, WorkItemType
+from worknexus.modules.work_items.schemas import WorkItemCreateIn, WorkItemSource, WorkItemType
 
 pytestmark = pytest.mark.integration
 
@@ -160,3 +160,23 @@ async def test_non_member_cannot_read_flat_item(
     assert login.json()["code"] == 0
     resp = await client.get(f"{API}/work-items/{created.id}")
     assert resp.status_code == 403
+
+
+@pytest.mark.p1
+async def test_project_summary(owner_client: AsyncClient, initialized: SimpleNamespace, db: AsyncSession) -> None:
+    pid = initialized.project.id
+    await _create(owner_client, pid, priority="high")
+    # AI-created item (source=mcp) via the service so aiCreatedCount is exercised.
+    await service.create_work_item(
+        db,
+        _owner_actor(initialized),
+        pid,
+        WorkItemCreateIn(type=WorkItemType.TASK, title="ai"),
+        source=WorkItemSource.MCP,
+    )
+    summary = (await owner_client.get(f"{API}/projects/{pid}/summary")).json()["data"]
+    assert summary["totalCount"] == 2
+    assert summary["highPriorityCount"] == 1
+    assert summary["aiCreatedCount"] == 1
+    assert summary["statusCounts"]["backlog"] == 2
+    assert len(summary["recentActivities"]) >= 1

@@ -13,6 +13,7 @@ from worknexus.modules.work_items.schemas import (
     ActivityOut,
     CommentCreateIn,
     CommentOut,
+    ProjectSummaryOut,
     RelationCreateIn,
     RelationOut,
     WorkItemCreateIn,
@@ -52,6 +53,15 @@ async def list_work_items(
         params=params,
     )
     return Envelope(data=Page.build(items, total, params))
+
+
+@router.get("/projects/{project_id}/summary", operation_id="get_project_summary")
+async def get_project_summary(
+    project_id: str,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    subject: Annotated[Subject, Depends(require_permission(Permission.WORK_ITEM_READ, project_param="project_id"))],
+) -> Envelope[ProjectSummaryOut]:
+    return Envelope(data=await service.get_project_summary(db, subject.actor, project_id))
 
 
 @router.post("/projects/{project_id}/work-items", operation_id="create_work_item")
