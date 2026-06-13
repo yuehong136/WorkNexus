@@ -20,30 +20,44 @@ import type {
 
 import type {
   AcceptInviteIn,
+  CommentCreateIn,
+  EnvelopeCommentOut,
   EnvelopeCurrentUserContext,
   EnvelopeInviteCreatedOut,
   EnvelopeInviteOut,
   EnvelopeInvitePreviewOut,
+  EnvelopeListActivityOut,
+  EnvelopeListCommentOut,
   EnvelopeListProjectMemberOut,
+  EnvelopeListRelationOut,
   EnvelopeNoneType,
   EnvelopePageInviteOut,
   EnvelopePageProjectOut,
   EnvelopePageUserListOut,
+  EnvelopePageWorkItemOut,
   EnvelopeProjectMemberOut,
   EnvelopeProjectOut,
+  EnvelopeProjectSummaryOut,
+  EnvelopeRelationOut,
   EnvelopeSetupStatusOut,
+  EnvelopeWorkItemOut,
   GetHealth200,
   HTTPValidationError,
   InviteCreateIn,
   ListInvitesParams,
   ListProjectsParams,
   ListUsersParams,
+  ListWorkItemsParams,
   LoginIn,
   ProjectCreateIn,
   ProjectMemberAddIn,
   ProjectMemberUpdateIn,
   ProjectUpdateIn,
-  SetupIn
+  RelationCreateIn,
+  SetupIn,
+  WorkItemCreateIn,
+  WorkItemTransitionIn,
+  WorkItemUpdateIn
 } from './model';
 
 import { apiMutator } from './mutator';
@@ -1991,6 +2005,1230 @@ export const useRemoveProjectMember = <TError = HTTPValidationError,
       > => {
 
       const mutationOptions = getRemoveProjectMemberMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+    
+/**
+ * @summary List Work Items
+ */
+export type listWorkItemsResponse200 = {
+  data: EnvelopePageWorkItemOut
+  status: 200
+}
+
+export type listWorkItemsResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+    
+export type listWorkItemsResponseSuccess = (listWorkItemsResponse200) & {
+  headers: Headers;
+};
+export type listWorkItemsResponseError = (listWorkItemsResponse422) & {
+  headers: Headers;
+};
+
+export type listWorkItemsResponse = (listWorkItemsResponseSuccess | listWorkItemsResponseError)
+
+export const getListWorkItemsUrl = (projectId: string,
+    params?: ListWorkItemsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/v1/projects/${projectId}/work-items?${stringifiedParams}` : `/api/v1/projects/${projectId}/work-items`
+}
+
+export const listWorkItems = async (projectId: string,
+    params?: ListWorkItemsParams, options?: RequestInit): Promise<listWorkItemsResponse> => {
+  
+  return apiMutator<listWorkItemsResponse>(getListWorkItemsUrl(projectId,params),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+
+
+export const getListWorkItemsQueryKey = (projectId?: string,
+    params?: ListWorkItemsParams,) => {
+    return [
+    `/api/v1/projects/${projectId}/work-items`, ...(params ? [params]: [])
+    ] as const;
+    }
+
+    
+export const getListWorkItemsQueryOptions = <TData = Awaited<ReturnType<typeof listWorkItems>>, TError = HTTPValidationError>(projectId: string,
+    params?: ListWorkItemsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listWorkItems>>, TError, TData>, request?: SecondParameter<typeof apiMutator>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListWorkItemsQueryKey(projectId,params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listWorkItems>>> = ({ signal }) => listWorkItems(projectId,params, { signal, ...requestOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(projectId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listWorkItems>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListWorkItemsQueryResult = NonNullable<Awaited<ReturnType<typeof listWorkItems>>>
+export type ListWorkItemsQueryError = HTTPValidationError
+
+
+/**
+ * @summary List Work Items
+ */
+
+export function useListWorkItems<TData = Awaited<ReturnType<typeof listWorkItems>>, TError = HTTPValidationError>(
+ projectId: string,
+    params?: ListWorkItemsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listWorkItems>>, TError, TData>, request?: SecondParameter<typeof apiMutator>}
+  
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListWorkItemsQueryOptions(projectId,params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * @summary Create Work Item
+ */
+export type createWorkItemResponse200 = {
+  data: EnvelopeWorkItemOut
+  status: 200
+}
+
+export type createWorkItemResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+    
+export type createWorkItemResponseSuccess = (createWorkItemResponse200) & {
+  headers: Headers;
+};
+export type createWorkItemResponseError = (createWorkItemResponse422) & {
+  headers: Headers;
+};
+
+export type createWorkItemResponse = (createWorkItemResponseSuccess | createWorkItemResponseError)
+
+export const getCreateWorkItemUrl = (projectId: string,) => {
+
+
+  
+
+  return `/api/v1/projects/${projectId}/work-items`
+}
+
+export const createWorkItem = async (projectId: string,
+    workItemCreateIn: WorkItemCreateIn, options?: RequestInit): Promise<createWorkItemResponse> => {
+  
+  return apiMutator<createWorkItemResponse>(getCreateWorkItemUrl(projectId),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      workItemCreateIn,)
+  }
+);}
+
+
+
+
+export const getCreateWorkItemMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createWorkItem>>, TError,{projectId: string;data: WorkItemCreateIn}, TContext>, request?: SecondParameter<typeof apiMutator>}
+): UseMutationOptions<Awaited<ReturnType<typeof createWorkItem>>, TError,{projectId: string;data: WorkItemCreateIn}, TContext> => {
+
+const mutationKey = ['createWorkItem'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createWorkItem>>, {projectId: string;data: WorkItemCreateIn}> = (props) => {
+          const {projectId,data} = props ?? {};
+
+          return  createWorkItem(projectId,data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateWorkItemMutationResult = NonNullable<Awaited<ReturnType<typeof createWorkItem>>>
+    export type CreateWorkItemMutationBody = WorkItemCreateIn
+    export type CreateWorkItemMutationError = HTTPValidationError
+
+    /**
+ * @summary Create Work Item
+ */
+export const useCreateWorkItem = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createWorkItem>>, TError,{projectId: string;data: WorkItemCreateIn}, TContext>, request?: SecondParameter<typeof apiMutator>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createWorkItem>>,
+        TError,
+        {projectId: string;data: WorkItemCreateIn},
+        TContext
+      > => {
+
+      const mutationOptions = getCreateWorkItemMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+    
+/**
+ * @summary Get Project Summary
+ */
+export type getProjectSummaryResponse200 = {
+  data: EnvelopeProjectSummaryOut
+  status: 200
+}
+
+export type getProjectSummaryResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+    
+export type getProjectSummaryResponseSuccess = (getProjectSummaryResponse200) & {
+  headers: Headers;
+};
+export type getProjectSummaryResponseError = (getProjectSummaryResponse422) & {
+  headers: Headers;
+};
+
+export type getProjectSummaryResponse = (getProjectSummaryResponseSuccess | getProjectSummaryResponseError)
+
+export const getGetProjectSummaryUrl = (projectId: string,) => {
+
+
+  
+
+  return `/api/v1/projects/${projectId}/summary`
+}
+
+export const getProjectSummary = async (projectId: string, options?: RequestInit): Promise<getProjectSummaryResponse> => {
+  
+  return apiMutator<getProjectSummaryResponse>(getGetProjectSummaryUrl(projectId),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+
+
+export const getGetProjectSummaryQueryKey = (projectId?: string,) => {
+    return [
+    `/api/v1/projects/${projectId}/summary`
+    ] as const;
+    }
+
+    
+export const getGetProjectSummaryQueryOptions = <TData = Awaited<ReturnType<typeof getProjectSummary>>, TError = HTTPValidationError>(projectId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getProjectSummary>>, TError, TData>, request?: SecondParameter<typeof apiMutator>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetProjectSummaryQueryKey(projectId);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getProjectSummary>>> = ({ signal }) => getProjectSummary(projectId, { signal, ...requestOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(projectId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getProjectSummary>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetProjectSummaryQueryResult = NonNullable<Awaited<ReturnType<typeof getProjectSummary>>>
+export type GetProjectSummaryQueryError = HTTPValidationError
+
+
+/**
+ * @summary Get Project Summary
+ */
+
+export function useGetProjectSummary<TData = Awaited<ReturnType<typeof getProjectSummary>>, TError = HTTPValidationError>(
+ projectId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getProjectSummary>>, TError, TData>, request?: SecondParameter<typeof apiMutator>}
+  
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetProjectSummaryQueryOptions(projectId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * @summary Get Work Item
+ */
+export type getWorkItemResponse200 = {
+  data: EnvelopeWorkItemOut
+  status: 200
+}
+
+export type getWorkItemResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+    
+export type getWorkItemResponseSuccess = (getWorkItemResponse200) & {
+  headers: Headers;
+};
+export type getWorkItemResponseError = (getWorkItemResponse422) & {
+  headers: Headers;
+};
+
+export type getWorkItemResponse = (getWorkItemResponseSuccess | getWorkItemResponseError)
+
+export const getGetWorkItemUrl = (workItemId: string,) => {
+
+
+  
+
+  return `/api/v1/work-items/${workItemId}`
+}
+
+export const getWorkItem = async (workItemId: string, options?: RequestInit): Promise<getWorkItemResponse> => {
+  
+  return apiMutator<getWorkItemResponse>(getGetWorkItemUrl(workItemId),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+
+
+export const getGetWorkItemQueryKey = (workItemId?: string,) => {
+    return [
+    `/api/v1/work-items/${workItemId}`
+    ] as const;
+    }
+
+    
+export const getGetWorkItemQueryOptions = <TData = Awaited<ReturnType<typeof getWorkItem>>, TError = HTTPValidationError>(workItemId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getWorkItem>>, TError, TData>, request?: SecondParameter<typeof apiMutator>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetWorkItemQueryKey(workItemId);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getWorkItem>>> = ({ signal }) => getWorkItem(workItemId, { signal, ...requestOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(workItemId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getWorkItem>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetWorkItemQueryResult = NonNullable<Awaited<ReturnType<typeof getWorkItem>>>
+export type GetWorkItemQueryError = HTTPValidationError
+
+
+/**
+ * @summary Get Work Item
+ */
+
+export function useGetWorkItem<TData = Awaited<ReturnType<typeof getWorkItem>>, TError = HTTPValidationError>(
+ workItemId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getWorkItem>>, TError, TData>, request?: SecondParameter<typeof apiMutator>}
+  
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetWorkItemQueryOptions(workItemId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * @summary Update Work Item
+ */
+export type updateWorkItemResponse200 = {
+  data: EnvelopeWorkItemOut
+  status: 200
+}
+
+export type updateWorkItemResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+    
+export type updateWorkItemResponseSuccess = (updateWorkItemResponse200) & {
+  headers: Headers;
+};
+export type updateWorkItemResponseError = (updateWorkItemResponse422) & {
+  headers: Headers;
+};
+
+export type updateWorkItemResponse = (updateWorkItemResponseSuccess | updateWorkItemResponseError)
+
+export const getUpdateWorkItemUrl = (workItemId: string,) => {
+
+
+  
+
+  return `/api/v1/work-items/${workItemId}`
+}
+
+export const updateWorkItem = async (workItemId: string,
+    workItemUpdateIn: WorkItemUpdateIn, options?: RequestInit): Promise<updateWorkItemResponse> => {
+  
+  return apiMutator<updateWorkItemResponse>(getUpdateWorkItemUrl(workItemId),
+  {      
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      workItemUpdateIn,)
+  }
+);}
+
+
+
+
+export const getUpdateWorkItemMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateWorkItem>>, TError,{workItemId: string;data: WorkItemUpdateIn}, TContext>, request?: SecondParameter<typeof apiMutator>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateWorkItem>>, TError,{workItemId: string;data: WorkItemUpdateIn}, TContext> => {
+
+const mutationKey = ['updateWorkItem'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateWorkItem>>, {workItemId: string;data: WorkItemUpdateIn}> = (props) => {
+          const {workItemId,data} = props ?? {};
+
+          return  updateWorkItem(workItemId,data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateWorkItemMutationResult = NonNullable<Awaited<ReturnType<typeof updateWorkItem>>>
+    export type UpdateWorkItemMutationBody = WorkItemUpdateIn
+    export type UpdateWorkItemMutationError = HTTPValidationError
+
+    /**
+ * @summary Update Work Item
+ */
+export const useUpdateWorkItem = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateWorkItem>>, TError,{workItemId: string;data: WorkItemUpdateIn}, TContext>, request?: SecondParameter<typeof apiMutator>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateWorkItem>>,
+        TError,
+        {workItemId: string;data: WorkItemUpdateIn},
+        TContext
+      > => {
+
+      const mutationOptions = getUpdateWorkItemMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+    
+/**
+ * @summary Delete Work Item
+ */
+export type deleteWorkItemResponse200 = {
+  data: EnvelopeNoneType
+  status: 200
+}
+
+export type deleteWorkItemResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+    
+export type deleteWorkItemResponseSuccess = (deleteWorkItemResponse200) & {
+  headers: Headers;
+};
+export type deleteWorkItemResponseError = (deleteWorkItemResponse422) & {
+  headers: Headers;
+};
+
+export type deleteWorkItemResponse = (deleteWorkItemResponseSuccess | deleteWorkItemResponseError)
+
+export const getDeleteWorkItemUrl = (workItemId: string,) => {
+
+
+  
+
+  return `/api/v1/work-items/${workItemId}`
+}
+
+export const deleteWorkItem = async (workItemId: string, options?: RequestInit): Promise<deleteWorkItemResponse> => {
+  
+  return apiMutator<deleteWorkItemResponse>(getDeleteWorkItemUrl(workItemId),
+  {      
+    ...options,
+    method: 'DELETE'
+    
+    
+  }
+);}
+
+
+
+
+export const getDeleteWorkItemMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteWorkItem>>, TError,{workItemId: string}, TContext>, request?: SecondParameter<typeof apiMutator>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteWorkItem>>, TError,{workItemId: string}, TContext> => {
+
+const mutationKey = ['deleteWorkItem'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteWorkItem>>, {workItemId: string}> = (props) => {
+          const {workItemId} = props ?? {};
+
+          return  deleteWorkItem(workItemId,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteWorkItemMutationResult = NonNullable<Awaited<ReturnType<typeof deleteWorkItem>>>
+    
+    export type DeleteWorkItemMutationError = HTTPValidationError
+
+    /**
+ * @summary Delete Work Item
+ */
+export const useDeleteWorkItem = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteWorkItem>>, TError,{workItemId: string}, TContext>, request?: SecondParameter<typeof apiMutator>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteWorkItem>>,
+        TError,
+        {workItemId: string},
+        TContext
+      > => {
+
+      const mutationOptions = getDeleteWorkItemMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+    
+/**
+ * @summary Transition Work Item
+ */
+export type transitionWorkItemResponse200 = {
+  data: EnvelopeWorkItemOut
+  status: 200
+}
+
+export type transitionWorkItemResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+    
+export type transitionWorkItemResponseSuccess = (transitionWorkItemResponse200) & {
+  headers: Headers;
+};
+export type transitionWorkItemResponseError = (transitionWorkItemResponse422) & {
+  headers: Headers;
+};
+
+export type transitionWorkItemResponse = (transitionWorkItemResponseSuccess | transitionWorkItemResponseError)
+
+export const getTransitionWorkItemUrl = (workItemId: string,) => {
+
+
+  
+
+  return `/api/v1/work-items/${workItemId}/transition`
+}
+
+export const transitionWorkItem = async (workItemId: string,
+    workItemTransitionIn: WorkItemTransitionIn, options?: RequestInit): Promise<transitionWorkItemResponse> => {
+  
+  return apiMutator<transitionWorkItemResponse>(getTransitionWorkItemUrl(workItemId),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      workItemTransitionIn,)
+  }
+);}
+
+
+
+
+export const getTransitionWorkItemMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof transitionWorkItem>>, TError,{workItemId: string;data: WorkItemTransitionIn}, TContext>, request?: SecondParameter<typeof apiMutator>}
+): UseMutationOptions<Awaited<ReturnType<typeof transitionWorkItem>>, TError,{workItemId: string;data: WorkItemTransitionIn}, TContext> => {
+
+const mutationKey = ['transitionWorkItem'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof transitionWorkItem>>, {workItemId: string;data: WorkItemTransitionIn}> = (props) => {
+          const {workItemId,data} = props ?? {};
+
+          return  transitionWorkItem(workItemId,data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type TransitionWorkItemMutationResult = NonNullable<Awaited<ReturnType<typeof transitionWorkItem>>>
+    export type TransitionWorkItemMutationBody = WorkItemTransitionIn
+    export type TransitionWorkItemMutationError = HTTPValidationError
+
+    /**
+ * @summary Transition Work Item
+ */
+export const useTransitionWorkItem = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof transitionWorkItem>>, TError,{workItemId: string;data: WorkItemTransitionIn}, TContext>, request?: SecondParameter<typeof apiMutator>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof transitionWorkItem>>,
+        TError,
+        {workItemId: string;data: WorkItemTransitionIn},
+        TContext
+      > => {
+
+      const mutationOptions = getTransitionWorkItemMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+    
+/**
+ * @summary List Work Item Comments
+ */
+export type listWorkItemCommentsResponse200 = {
+  data: EnvelopeListCommentOut
+  status: 200
+}
+
+export type listWorkItemCommentsResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+    
+export type listWorkItemCommentsResponseSuccess = (listWorkItemCommentsResponse200) & {
+  headers: Headers;
+};
+export type listWorkItemCommentsResponseError = (listWorkItemCommentsResponse422) & {
+  headers: Headers;
+};
+
+export type listWorkItemCommentsResponse = (listWorkItemCommentsResponseSuccess | listWorkItemCommentsResponseError)
+
+export const getListWorkItemCommentsUrl = (workItemId: string,) => {
+
+
+  
+
+  return `/api/v1/work-items/${workItemId}/comments`
+}
+
+export const listWorkItemComments = async (workItemId: string, options?: RequestInit): Promise<listWorkItemCommentsResponse> => {
+  
+  return apiMutator<listWorkItemCommentsResponse>(getListWorkItemCommentsUrl(workItemId),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+
+
+export const getListWorkItemCommentsQueryKey = (workItemId?: string,) => {
+    return [
+    `/api/v1/work-items/${workItemId}/comments`
+    ] as const;
+    }
+
+    
+export const getListWorkItemCommentsQueryOptions = <TData = Awaited<ReturnType<typeof listWorkItemComments>>, TError = HTTPValidationError>(workItemId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listWorkItemComments>>, TError, TData>, request?: SecondParameter<typeof apiMutator>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListWorkItemCommentsQueryKey(workItemId);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listWorkItemComments>>> = ({ signal }) => listWorkItemComments(workItemId, { signal, ...requestOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(workItemId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listWorkItemComments>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListWorkItemCommentsQueryResult = NonNullable<Awaited<ReturnType<typeof listWorkItemComments>>>
+export type ListWorkItemCommentsQueryError = HTTPValidationError
+
+
+/**
+ * @summary List Work Item Comments
+ */
+
+export function useListWorkItemComments<TData = Awaited<ReturnType<typeof listWorkItemComments>>, TError = HTTPValidationError>(
+ workItemId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listWorkItemComments>>, TError, TData>, request?: SecondParameter<typeof apiMutator>}
+  
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListWorkItemCommentsQueryOptions(workItemId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * @summary Create Work Item Comment
+ */
+export type createWorkItemCommentResponse200 = {
+  data: EnvelopeCommentOut
+  status: 200
+}
+
+export type createWorkItemCommentResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+    
+export type createWorkItemCommentResponseSuccess = (createWorkItemCommentResponse200) & {
+  headers: Headers;
+};
+export type createWorkItemCommentResponseError = (createWorkItemCommentResponse422) & {
+  headers: Headers;
+};
+
+export type createWorkItemCommentResponse = (createWorkItemCommentResponseSuccess | createWorkItemCommentResponseError)
+
+export const getCreateWorkItemCommentUrl = (workItemId: string,) => {
+
+
+  
+
+  return `/api/v1/work-items/${workItemId}/comments`
+}
+
+export const createWorkItemComment = async (workItemId: string,
+    commentCreateIn: CommentCreateIn, options?: RequestInit): Promise<createWorkItemCommentResponse> => {
+  
+  return apiMutator<createWorkItemCommentResponse>(getCreateWorkItemCommentUrl(workItemId),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      commentCreateIn,)
+  }
+);}
+
+
+
+
+export const getCreateWorkItemCommentMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createWorkItemComment>>, TError,{workItemId: string;data: CommentCreateIn}, TContext>, request?: SecondParameter<typeof apiMutator>}
+): UseMutationOptions<Awaited<ReturnType<typeof createWorkItemComment>>, TError,{workItemId: string;data: CommentCreateIn}, TContext> => {
+
+const mutationKey = ['createWorkItemComment'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createWorkItemComment>>, {workItemId: string;data: CommentCreateIn}> = (props) => {
+          const {workItemId,data} = props ?? {};
+
+          return  createWorkItemComment(workItemId,data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateWorkItemCommentMutationResult = NonNullable<Awaited<ReturnType<typeof createWorkItemComment>>>
+    export type CreateWorkItemCommentMutationBody = CommentCreateIn
+    export type CreateWorkItemCommentMutationError = HTTPValidationError
+
+    /**
+ * @summary Create Work Item Comment
+ */
+export const useCreateWorkItemComment = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createWorkItemComment>>, TError,{workItemId: string;data: CommentCreateIn}, TContext>, request?: SecondParameter<typeof apiMutator>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createWorkItemComment>>,
+        TError,
+        {workItemId: string;data: CommentCreateIn},
+        TContext
+      > => {
+
+      const mutationOptions = getCreateWorkItemCommentMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+    
+/**
+ * @summary List Work Item Activities
+ */
+export type listWorkItemActivitiesResponse200 = {
+  data: EnvelopeListActivityOut
+  status: 200
+}
+
+export type listWorkItemActivitiesResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+    
+export type listWorkItemActivitiesResponseSuccess = (listWorkItemActivitiesResponse200) & {
+  headers: Headers;
+};
+export type listWorkItemActivitiesResponseError = (listWorkItemActivitiesResponse422) & {
+  headers: Headers;
+};
+
+export type listWorkItemActivitiesResponse = (listWorkItemActivitiesResponseSuccess | listWorkItemActivitiesResponseError)
+
+export const getListWorkItemActivitiesUrl = (workItemId: string,) => {
+
+
+  
+
+  return `/api/v1/work-items/${workItemId}/activities`
+}
+
+export const listWorkItemActivities = async (workItemId: string, options?: RequestInit): Promise<listWorkItemActivitiesResponse> => {
+  
+  return apiMutator<listWorkItemActivitiesResponse>(getListWorkItemActivitiesUrl(workItemId),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+
+
+export const getListWorkItemActivitiesQueryKey = (workItemId?: string,) => {
+    return [
+    `/api/v1/work-items/${workItemId}/activities`
+    ] as const;
+    }
+
+    
+export const getListWorkItemActivitiesQueryOptions = <TData = Awaited<ReturnType<typeof listWorkItemActivities>>, TError = HTTPValidationError>(workItemId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listWorkItemActivities>>, TError, TData>, request?: SecondParameter<typeof apiMutator>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListWorkItemActivitiesQueryKey(workItemId);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listWorkItemActivities>>> = ({ signal }) => listWorkItemActivities(workItemId, { signal, ...requestOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(workItemId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listWorkItemActivities>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListWorkItemActivitiesQueryResult = NonNullable<Awaited<ReturnType<typeof listWorkItemActivities>>>
+export type ListWorkItemActivitiesQueryError = HTTPValidationError
+
+
+/**
+ * @summary List Work Item Activities
+ */
+
+export function useListWorkItemActivities<TData = Awaited<ReturnType<typeof listWorkItemActivities>>, TError = HTTPValidationError>(
+ workItemId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listWorkItemActivities>>, TError, TData>, request?: SecondParameter<typeof apiMutator>}
+  
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListWorkItemActivitiesQueryOptions(workItemId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * @summary List Work Item Relations
+ */
+export type listWorkItemRelationsResponse200 = {
+  data: EnvelopeListRelationOut
+  status: 200
+}
+
+export type listWorkItemRelationsResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+    
+export type listWorkItemRelationsResponseSuccess = (listWorkItemRelationsResponse200) & {
+  headers: Headers;
+};
+export type listWorkItemRelationsResponseError = (listWorkItemRelationsResponse422) & {
+  headers: Headers;
+};
+
+export type listWorkItemRelationsResponse = (listWorkItemRelationsResponseSuccess | listWorkItemRelationsResponseError)
+
+export const getListWorkItemRelationsUrl = (workItemId: string,) => {
+
+
+  
+
+  return `/api/v1/work-items/${workItemId}/relations`
+}
+
+export const listWorkItemRelations = async (workItemId: string, options?: RequestInit): Promise<listWorkItemRelationsResponse> => {
+  
+  return apiMutator<listWorkItemRelationsResponse>(getListWorkItemRelationsUrl(workItemId),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+
+
+export const getListWorkItemRelationsQueryKey = (workItemId?: string,) => {
+    return [
+    `/api/v1/work-items/${workItemId}/relations`
+    ] as const;
+    }
+
+    
+export const getListWorkItemRelationsQueryOptions = <TData = Awaited<ReturnType<typeof listWorkItemRelations>>, TError = HTTPValidationError>(workItemId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listWorkItemRelations>>, TError, TData>, request?: SecondParameter<typeof apiMutator>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListWorkItemRelationsQueryKey(workItemId);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listWorkItemRelations>>> = ({ signal }) => listWorkItemRelations(workItemId, { signal, ...requestOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(workItemId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listWorkItemRelations>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListWorkItemRelationsQueryResult = NonNullable<Awaited<ReturnType<typeof listWorkItemRelations>>>
+export type ListWorkItemRelationsQueryError = HTTPValidationError
+
+
+/**
+ * @summary List Work Item Relations
+ */
+
+export function useListWorkItemRelations<TData = Awaited<ReturnType<typeof listWorkItemRelations>>, TError = HTTPValidationError>(
+ workItemId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listWorkItemRelations>>, TError, TData>, request?: SecondParameter<typeof apiMutator>}
+  
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListWorkItemRelationsQueryOptions(workItemId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * @summary Create Work Item Relation
+ */
+export type createWorkItemRelationResponse200 = {
+  data: EnvelopeRelationOut
+  status: 200
+}
+
+export type createWorkItemRelationResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+    
+export type createWorkItemRelationResponseSuccess = (createWorkItemRelationResponse200) & {
+  headers: Headers;
+};
+export type createWorkItemRelationResponseError = (createWorkItemRelationResponse422) & {
+  headers: Headers;
+};
+
+export type createWorkItemRelationResponse = (createWorkItemRelationResponseSuccess | createWorkItemRelationResponseError)
+
+export const getCreateWorkItemRelationUrl = (workItemId: string,) => {
+
+
+  
+
+  return `/api/v1/work-items/${workItemId}/relations`
+}
+
+export const createWorkItemRelation = async (workItemId: string,
+    relationCreateIn: RelationCreateIn, options?: RequestInit): Promise<createWorkItemRelationResponse> => {
+  
+  return apiMutator<createWorkItemRelationResponse>(getCreateWorkItemRelationUrl(workItemId),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      relationCreateIn,)
+  }
+);}
+
+
+
+
+export const getCreateWorkItemRelationMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createWorkItemRelation>>, TError,{workItemId: string;data: RelationCreateIn}, TContext>, request?: SecondParameter<typeof apiMutator>}
+): UseMutationOptions<Awaited<ReturnType<typeof createWorkItemRelation>>, TError,{workItemId: string;data: RelationCreateIn}, TContext> => {
+
+const mutationKey = ['createWorkItemRelation'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createWorkItemRelation>>, {workItemId: string;data: RelationCreateIn}> = (props) => {
+          const {workItemId,data} = props ?? {};
+
+          return  createWorkItemRelation(workItemId,data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateWorkItemRelationMutationResult = NonNullable<Awaited<ReturnType<typeof createWorkItemRelation>>>
+    export type CreateWorkItemRelationMutationBody = RelationCreateIn
+    export type CreateWorkItemRelationMutationError = HTTPValidationError
+
+    /**
+ * @summary Create Work Item Relation
+ */
+export const useCreateWorkItemRelation = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createWorkItemRelation>>, TError,{workItemId: string;data: RelationCreateIn}, TContext>, request?: SecondParameter<typeof apiMutator>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createWorkItemRelation>>,
+        TError,
+        {workItemId: string;data: RelationCreateIn},
+        TContext
+      > => {
+
+      const mutationOptions = getCreateWorkItemRelationMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+    
+/**
+ * @summary Delete Work Item Relation
+ */
+export type deleteWorkItemRelationResponse200 = {
+  data: EnvelopeNoneType
+  status: 200
+}
+
+export type deleteWorkItemRelationResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+    
+export type deleteWorkItemRelationResponseSuccess = (deleteWorkItemRelationResponse200) & {
+  headers: Headers;
+};
+export type deleteWorkItemRelationResponseError = (deleteWorkItemRelationResponse422) & {
+  headers: Headers;
+};
+
+export type deleteWorkItemRelationResponse = (deleteWorkItemRelationResponseSuccess | deleteWorkItemRelationResponseError)
+
+export const getDeleteWorkItemRelationUrl = (workItemId: string,
+    relationId: string,) => {
+
+
+  
+
+  return `/api/v1/work-items/${workItemId}/relations/${relationId}`
+}
+
+export const deleteWorkItemRelation = async (workItemId: string,
+    relationId: string, options?: RequestInit): Promise<deleteWorkItemRelationResponse> => {
+  
+  return apiMutator<deleteWorkItemRelationResponse>(getDeleteWorkItemRelationUrl(workItemId,relationId),
+  {      
+    ...options,
+    method: 'DELETE'
+    
+    
+  }
+);}
+
+
+
+
+export const getDeleteWorkItemRelationMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteWorkItemRelation>>, TError,{workItemId: string;relationId: string}, TContext>, request?: SecondParameter<typeof apiMutator>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteWorkItemRelation>>, TError,{workItemId: string;relationId: string}, TContext> => {
+
+const mutationKey = ['deleteWorkItemRelation'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteWorkItemRelation>>, {workItemId: string;relationId: string}> = (props) => {
+          const {workItemId,relationId} = props ?? {};
+
+          return  deleteWorkItemRelation(workItemId,relationId,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteWorkItemRelationMutationResult = NonNullable<Awaited<ReturnType<typeof deleteWorkItemRelation>>>
+    
+    export type DeleteWorkItemRelationMutationError = HTTPValidationError
+
+    /**
+ * @summary Delete Work Item Relation
+ */
+export const useDeleteWorkItemRelation = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteWorkItemRelation>>, TError,{workItemId: string;relationId: string}, TContext>, request?: SecondParameter<typeof apiMutator>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteWorkItemRelation>>,
+        TError,
+        {workItemId: string;relationId: string},
+        TContext
+      > => {
+
+      const mutationOptions = getDeleteWorkItemRelationMutationOptions(options);
 
       return useMutation(mutationOptions);
     }
