@@ -17,7 +17,12 @@ class AuditAction(StrEnum):
     INVITE_ACCEPT = "invite.accept"
     ROLE_BINDING_CREATE = "role_binding.create"
     ROLE_BINDING_DELETE = "role_binding.delete"
+    PROJECT_CREATE = "project.create"
+    PROJECT_UPDATE = "project.update"
+    PROJECT_ARCHIVE = "project.archive"
     PROJECT_MEMBER_ADD = "project.member.add"
+    PROJECT_MEMBER_UPDATE = "project.member.update"
+    PROJECT_MEMBER_REMOVE = "project.member.remove"
 
 
 async def record(

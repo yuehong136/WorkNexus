@@ -53,6 +53,7 @@ from worknexus.modules.identity.schemas import (
 )
 from worknexus.modules.projects import service as projects_service
 from worknexus.modules.projects.models import Project
+from worknexus.modules.projects.schemas import ProjectMemberOut, ProjectMemberRole
 
 SETUP_LOCK_KEY = 746_199_101
 PASSWORD_MIN_LENGTH = 8
@@ -146,7 +147,7 @@ async def run_setup(
     )
 
     owner_actor = Actor(id=owner.id, type=ActorType.USER, tenant_id=tenant.id)
-    project = await projects_service.create_project(
+    project = await projects_service.insert_project(
         db, owner_actor, tenant_id=tenant.id, name="WorkNexus Internal", key="WNX", owner_id=owner.id
     )
 
@@ -591,3 +592,133 @@ async def verify_delegation_token(db: AsyncSession, token: str) -> DelegationCon
         run_id=row.run_id,
         permissions_snapshot=row.permissions_snapshot,
     )
+
+
+# Project membership lives in project_members (D3: identity owns this table). projects.router
+# exposes the /projects/{id}/members endpoints and calls into these functions, so the only
+# writes to project_members are here, alongside their audit rows.
+
+
+def _member_out(member: ProjectMember, user: User) -> ProjectMemberOut:
+    return ProjectMemberOut(
+        user_id=user.id,
+        display_name=user.display_name,
+        email=user.email,
+        avatar_url=user.avatar_url,
+        role=ProjectMemberRole(member.role),
+        created_at=member.created_at,
+    )
+
+
+async def _is_tenant_owner(db: AsyncSession, user_id: str) -> bool:
+    row = (
+        await db.execute(
+            select(RoleBinding.id).where(
+                RoleBinding.subject_type == SubjectType.USER,
+                RoleBinding.subject_id == user_id,
+                RoleBinding.role == Role.OWNER,
+                RoleBinding.scope_type == ScopeType.TENANT,
+            )
+        )
+    ).first()
+    return row is not None
+
+
+async def _get_membership(db: AsyncSession, project_id: str, user_id: str) -> ProjectMember | None:
+    return (
+        await db.execute(
+            select(ProjectMember).where(ProjectMember.project_id == project_id, ProjectMember.user_id == user_id)
+        )
+    ).scalar_one_or_none()
+
+
+async def list_project_members(db: AsyncSession, actor: Actor, project_id: str) -> list[ProjectMemberOut]:
+    await projects_service.get_project(db, project_id, actor.tenant_id)
+    rows = (
+        await db.execute(
+            select(ProjectMember, User)
+            .join(User, User.id == ProjectMember.user_id)
+            .where(ProjectMember.project_id == project_id)
+            .order_by(ProjectMember.created_at)
+        )
+    ).all()
+    return [_member_out(member, user) for member, user in rows]
+
+
+async def add_project_member(
+    db: AsyncSession, actor: Actor, project_id: str, user_id: str, role: ProjectMemberRole
+) -> ProjectMemberOut:
+    await projects_service.get_project(db, project_id, actor.tenant_id)
+    user = await db.get(User, user_id)
+    if user is None or user.tenant_id != actor.tenant_id:
+        raise BizError(ErrorCode.NOT_FOUND, "user not found")
+    if await _is_tenant_owner(db, user_id):
+        raise BizError(ErrorCode.CANNOT_MANAGE_OWNER_MEMBERSHIP, "cannot manage the workspace owner's membership")
+    if await _get_membership(db, project_id, user_id) is not None:
+        raise BizError(ErrorCode.MEMBER_ALREADY_EXISTS, "user is already a project member")
+    member = ProjectMember(
+        tenant_id=actor.tenant_id,
+        project_id=project_id,
+        user_id=user_id,
+        role=role,
+        created_by=actor.id,
+    )
+    db.add(member)
+    await db.flush()
+    await audit.record(
+        db,
+        actor,
+        action=AuditAction.PROJECT_MEMBER_ADD,
+        resource_type="user",
+        resource_id=user_id,
+        project_id=project_id,
+        after={"role": role},
+    )
+    await db.commit()
+    return _member_out(member, user)
+
+
+async def update_project_member_role(
+    db: AsyncSession, actor: Actor, project_id: str, user_id: str, role: ProjectMemberRole
+) -> ProjectMemberOut:
+    await projects_service.get_project(db, project_id, actor.tenant_id)
+    member = await _get_membership(db, project_id, user_id)
+    if member is None:
+        raise BizError(ErrorCode.MEMBER_NOT_FOUND, "user is not a project member")
+    before = {"role": member.role}
+    member.role = role
+    await db.flush()
+    await audit.record(
+        db,
+        actor,
+        action=AuditAction.PROJECT_MEMBER_UPDATE,
+        resource_type="user",
+        resource_id=user_id,
+        project_id=project_id,
+        before=before,
+        after={"role": role},
+    )
+    await db.commit()
+    user = await db.get(User, user_id)
+    assert user is not None
+    return _member_out(member, user)
+
+
+async def remove_project_member(db: AsyncSession, actor: Actor, project_id: str, user_id: str) -> None:
+    await projects_service.get_project(db, project_id, actor.tenant_id)
+    member = await _get_membership(db, project_id, user_id)
+    if member is None:
+        raise BizError(ErrorCode.MEMBER_NOT_FOUND, "user is not a project member")
+    before = {"role": member.role}
+    await db.delete(member)
+    await db.flush()
+    await audit.record(
+        db,
+        actor,
+        action=AuditAction.PROJECT_MEMBER_REMOVE,
+        resource_type="user",
+        resource_id=user_id,
+        project_id=project_id,
+        before=before,
+    )
+    await db.commit()
