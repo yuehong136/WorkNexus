@@ -14,7 +14,17 @@ class ErrorCode(IntEnum):
     INVALID_INPUT = 1002
     UNAUTHORIZED = 1003
     FORBIDDEN = 1004
-    # 2xxx: work_items / 3xxx: intake (reserved)
+    # 2xxx: work_items
+    WORK_ITEM_NOT_FOUND = 2001
+    INVALID_STATUS_TRANSITION = 2002
+    COMMENT_NOT_FOUND = 2003
+    RELATION_NOT_FOUND = 2004
+    INVALID_RELATION = 2005
+    RELATION_ALREADY_EXISTS = 2006
+    INVALID_CUSTOM_FIELDS = 2007
+    INVALID_ASSIGNEE = 2008
+    PROJECT_ARCHIVED = 2009
+    # 3xxx: intake (reserved)
     # 4xxx: identity
     SETUP_ALREADY_COMPLETED = 4001
     INVALID_CREDENTIALS = 4002

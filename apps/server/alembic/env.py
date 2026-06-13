@@ -8,7 +8,8 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 # Import all module models so autogenerate sees the full metadata.
 import worknexus.modules.audit.models
 import worknexus.modules.identity.models
-import worknexus.modules.projects.models  # noqa: F401
+import worknexus.modules.projects.models
+import worknexus.modules.work_items.models  # noqa: F401
 from alembic import context
 from worknexus.config import get_settings
 from worknexus.db import Base
