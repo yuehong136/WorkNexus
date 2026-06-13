@@ -32,6 +32,9 @@
 | clsx + tailwind-merge | 2.1.1 / 3.6.0 | 统一经 cn() |
 | class-variance-authority | 0.7.1 | 组件变体 |
 | cmdk | 1.1.1 | 命令面板 |
+| react-markdown | 10.1.0 | Markdown 渲染（经 lib/markdown.tsx，不启用 rehype-raw） |
+| dompurify | 3.4.10 | 不可信内容 sanitize（与 react-markdown 配合，§7.7） |
+| @dnd-kit/core | 6.3.1 | 看板拖拽（DndContext + useDraggable/useDroppable） |
 | msw | 2.14.6 | 测试 API mock |
 
 ## 后端（apps/server）

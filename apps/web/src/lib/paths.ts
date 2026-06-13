@@ -5,5 +5,7 @@ export const paths = {
   invite: (token: string) => `/invites/${token}`,
   projects: () => '/projects',
   projectDetail: (id: string) => `/projects/${id}`,
+  workItems: (projectId: string) => `/projects/${projectId}/work-items`,
+  board: (projectId: string) => `/projects/${projectId}/board`,
   settingsMembers: () => '/settings/members',
 } as const

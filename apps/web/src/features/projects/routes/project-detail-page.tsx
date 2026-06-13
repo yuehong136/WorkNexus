@@ -1,7 +1,7 @@
-import { Pencil } from 'lucide-react'
+import { ListChecks, Pencil } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useParams } from 'react-router'
+import { useNavigate, useParams } from 'react-router'
 import { toast } from 'sonner'
 
 import { ConfirmDialog } from '@/components/patterns/confirm-dialog'
@@ -11,10 +11,12 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { ProjectFormDialog } from '@/features/projects/components/project-form-dialog'
 import { ProjectMembersSection } from '@/features/projects/components/project-members-section'
+import { ProjectSummaryCards } from '@/features/projects/components/project-summary-cards'
 import { useArchiveProjectMutation } from '@/features/projects/api/use-archive-project-mutation'
 import { useProjectQuery } from '@/features/projects/api/use-project-query'
 import { useHasPermission } from '@/lib/auth/use-has-permission'
 import { formatDateTime } from '@/lib/datetime'
+import { paths } from '@/lib/paths'
 
 function Field({ label, value }: { label: string; value: React.ReactNode }) {
   return (
@@ -28,6 +30,7 @@ function Field({ label, value }: { label: string; value: React.ReactNode }) {
 export function ProjectDetailPage() {
   const { t } = useTranslation(['common', 'projects'])
   const { projectId = '' } = useParams()
+  const navigate = useNavigate()
   const [editOpen, setEditOpen] = useState(false)
   const [archiveOpen, setArchiveOpen] = useState(false)
 
@@ -65,6 +68,10 @@ export function ProjectDetailPage() {
           <p className="text-sm text-text-muted">{project.key}</p>
         </div>
         <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={() => void navigate(paths.workItems(project.id))}>
+            <ListChecks className="size-4" />
+            {t('projects:detail.workItems')}
+          </Button>
           {canUpdate ? (
             <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
               <Pencil className="size-4" />
@@ -91,6 +98,8 @@ export function ProjectDetailPage() {
           </dd>
         </div>
       </dl>
+
+      <ProjectSummaryCards projectId={project.id} />
 
       <ProjectMembersSection projectId={project.id} ownerId={project.ownerId} canManage={canManageMembers} />
 

@@ -61,6 +61,20 @@ export const router = createBrowserRouter([
             },
           },
           {
+            path: paths.workItems(':projectId'),
+            lazy: async () => {
+              const { WorkItemsPage } = await import('@/features/work-items/routes/work-items-page')
+              return { Component: WorkItemsPage }
+            },
+          },
+          {
+            path: paths.board(':projectId'),
+            lazy: async () => {
+              const { BoardPage } = await import('@/features/work-items/routes/board-page')
+              return { Component: BoardPage }
+            },
+          },
+          {
             path: paths.settingsMembers(),
             lazy: async () => {
               const { MembersPage } = await import('@/features/settings/routes/members-page')

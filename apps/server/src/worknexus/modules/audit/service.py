@@ -23,6 +23,13 @@ class AuditAction(StrEnum):
     PROJECT_MEMBER_ADD = "project.member.add"
     PROJECT_MEMBER_UPDATE = "project.member.update"
     PROJECT_MEMBER_REMOVE = "project.member.remove"
+    WORK_ITEM_CREATE = "work_item.create"
+    WORK_ITEM_UPDATE = "work_item.update"
+    WORK_ITEM_DELETE = "work_item.delete"
+    WORK_ITEM_TRANSITION = "work_item.transition"
+    WORK_ITEM_COMMENT = "work_item.comment"
+    WORK_ITEM_RELATION_ADD = "work_item.relation.add"
+    WORK_ITEM_RELATION_REMOVE = "work_item.relation.remove"
 
 
 async def record(
