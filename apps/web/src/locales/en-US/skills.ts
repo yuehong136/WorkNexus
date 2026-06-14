@@ -3,7 +3,7 @@ export default {
   description: 'Skills AI can call over MCP, their risk level, and an audit of every call',
   skillsSection: {
     title: 'Registered skills',
-    description: 'Reflected from the MCP composition; write tools execute only after M5 AgentAction confirmation',
+    description: 'Reflected from the MCP composition; write tools execute only after human AgentAction confirmation',
     error: 'Failed to load skills',
   },
   invocationsSection: {
@@ -12,7 +12,7 @@ export default {
   },
   executable: {
     yes: 'Executable',
-    no: 'Needs M5 confirmation',
+    no: 'Needs confirmation',
   },
   risk: {
     read: 'Read',
