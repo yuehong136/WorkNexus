@@ -22,6 +22,7 @@ from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, create_async_engin
 import worknexus.modules.audit.models  # noqa: E402
 import worknexus.modules.identity.models  # noqa: E402
 import worknexus.modules.projects.models  # noqa: E402
+import worknexus.modules.skills.models  # noqa: E402
 import worknexus.modules.work_items.models  # noqa: E402, F401
 from worknexus.db import Base, get_db  # noqa: E402
 from worknexus.modules.identity import service as identity_service  # noqa: E402

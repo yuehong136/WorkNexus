@@ -30,9 +30,11 @@ import type {
   EnvelopeListCommentOut,
   EnvelopeListProjectMemberOut,
   EnvelopeListRelationOut,
+  EnvelopeListSkillOut,
   EnvelopeNoneType,
   EnvelopePageInviteOut,
   EnvelopePageProjectOut,
+  EnvelopePageSkillInvocationOut,
   EnvelopePageUserListOut,
   EnvelopePageWorkItemOut,
   EnvelopeProjectMemberOut,
@@ -40,12 +42,14 @@ import type {
   EnvelopeProjectSummaryOut,
   EnvelopeRelationOut,
   EnvelopeSetupStatusOut,
+  EnvelopeSkillInvocationOut,
   EnvelopeWorkItemOut,
   GetHealth200,
   HTTPValidationError,
   InviteCreateIn,
   ListInvitesParams,
   ListProjectsParams,
+  ListSkillInvocationsParams,
   ListUsersParams,
   ListWorkItemsParams,
   LoginIn,
@@ -3232,3 +3236,285 @@ export const useDeleteWorkItemRelation = <TError = HTTPValidationError,
 
       return useMutation(mutationOptions);
     }
+    
+/**
+ * @summary List Skills
+ */
+export type listSkillsResponse200 = {
+  data: EnvelopeListSkillOut
+  status: 200
+}
+    
+export type listSkillsResponseSuccess = (listSkillsResponse200) & {
+  headers: Headers;
+};
+;
+
+export type listSkillsResponse = (listSkillsResponseSuccess)
+
+export const getListSkillsUrl = () => {
+
+
+  
+
+  return `/api/v1/skills`
+}
+
+export const listSkills = async ( options?: RequestInit): Promise<listSkillsResponse> => {
+  
+  return apiMutator<listSkillsResponse>(getListSkillsUrl(),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+
+
+export const getListSkillsQueryKey = () => {
+    return [
+    `/api/v1/skills`
+    ] as const;
+    }
+
+    
+export const getListSkillsQueryOptions = <TData = Awaited<ReturnType<typeof listSkills>>, TError = unknown>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listSkills>>, TError, TData>, request?: SecondParameter<typeof apiMutator>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListSkillsQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listSkills>>> = ({ signal }) => listSkills({ signal, ...requestOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listSkills>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListSkillsQueryResult = NonNullable<Awaited<ReturnType<typeof listSkills>>>
+export type ListSkillsQueryError = unknown
+
+
+/**
+ * @summary List Skills
+ */
+
+export function useListSkills<TData = Awaited<ReturnType<typeof listSkills>>, TError = unknown>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listSkills>>, TError, TData>, request?: SecondParameter<typeof apiMutator>}
+  
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListSkillsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * @summary List Skill Invocations
+ */
+export type listSkillInvocationsResponse200 = {
+  data: EnvelopePageSkillInvocationOut
+  status: 200
+}
+
+export type listSkillInvocationsResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+    
+export type listSkillInvocationsResponseSuccess = (listSkillInvocationsResponse200) & {
+  headers: Headers;
+};
+export type listSkillInvocationsResponseError = (listSkillInvocationsResponse422) & {
+  headers: Headers;
+};
+
+export type listSkillInvocationsResponse = (listSkillInvocationsResponseSuccess | listSkillInvocationsResponseError)
+
+export const getListSkillInvocationsUrl = (params?: ListSkillInvocationsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/v1/skills/invocations?${stringifiedParams}` : `/api/v1/skills/invocations`
+}
+
+export const listSkillInvocations = async (params?: ListSkillInvocationsParams, options?: RequestInit): Promise<listSkillInvocationsResponse> => {
+  
+  return apiMutator<listSkillInvocationsResponse>(getListSkillInvocationsUrl(params),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+
+
+export const getListSkillInvocationsQueryKey = (params?: ListSkillInvocationsParams,) => {
+    return [
+    `/api/v1/skills/invocations`, ...(params ? [params]: [])
+    ] as const;
+    }
+
+    
+export const getListSkillInvocationsQueryOptions = <TData = Awaited<ReturnType<typeof listSkillInvocations>>, TError = HTTPValidationError>(params?: ListSkillInvocationsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listSkillInvocations>>, TError, TData>, request?: SecondParameter<typeof apiMutator>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListSkillInvocationsQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listSkillInvocations>>> = ({ signal }) => listSkillInvocations(params, { signal, ...requestOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listSkillInvocations>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListSkillInvocationsQueryResult = NonNullable<Awaited<ReturnType<typeof listSkillInvocations>>>
+export type ListSkillInvocationsQueryError = HTTPValidationError
+
+
+/**
+ * @summary List Skill Invocations
+ */
+
+export function useListSkillInvocations<TData = Awaited<ReturnType<typeof listSkillInvocations>>, TError = HTTPValidationError>(
+ params?: ListSkillInvocationsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listSkillInvocations>>, TError, TData>, request?: SecondParameter<typeof apiMutator>}
+  
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListSkillInvocationsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * @summary Get Skill Invocation
+ */
+export type getSkillInvocationResponse200 = {
+  data: EnvelopeSkillInvocationOut
+  status: 200
+}
+
+export type getSkillInvocationResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+    
+export type getSkillInvocationResponseSuccess = (getSkillInvocationResponse200) & {
+  headers: Headers;
+};
+export type getSkillInvocationResponseError = (getSkillInvocationResponse422) & {
+  headers: Headers;
+};
+
+export type getSkillInvocationResponse = (getSkillInvocationResponseSuccess | getSkillInvocationResponseError)
+
+export const getGetSkillInvocationUrl = (invocationId: string,) => {
+
+
+  
+
+  return `/api/v1/skills/invocations/${invocationId}`
+}
+
+export const getSkillInvocation = async (invocationId: string, options?: RequestInit): Promise<getSkillInvocationResponse> => {
+  
+  return apiMutator<getSkillInvocationResponse>(getGetSkillInvocationUrl(invocationId),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+
+
+export const getGetSkillInvocationQueryKey = (invocationId?: string,) => {
+    return [
+    `/api/v1/skills/invocations/${invocationId}`
+    ] as const;
+    }
+
+    
+export const getGetSkillInvocationQueryOptions = <TData = Awaited<ReturnType<typeof getSkillInvocation>>, TError = HTTPValidationError>(invocationId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getSkillInvocation>>, TError, TData>, request?: SecondParameter<typeof apiMutator>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetSkillInvocationQueryKey(invocationId);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getSkillInvocation>>> = ({ signal }) => getSkillInvocation(invocationId, { signal, ...requestOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(invocationId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getSkillInvocation>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetSkillInvocationQueryResult = NonNullable<Awaited<ReturnType<typeof getSkillInvocation>>>
+export type GetSkillInvocationQueryError = HTTPValidationError
+
+
+/**
+ * @summary Get Skill Invocation
+ */
+
+export function useGetSkillInvocation<TData = Awaited<ReturnType<typeof getSkillInvocation>>, TError = HTTPValidationError>(
+ invocationId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getSkillInvocation>>, TError, TData>, request?: SecondParameter<typeof apiMutator>}
+  
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetSkillInvocationQueryOptions(invocationId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}

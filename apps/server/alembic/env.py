@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 import worknexus.modules.audit.models
 import worknexus.modules.identity.models
 import worknexus.modules.projects.models
+import worknexus.modules.skills.models
 import worknexus.modules.work_items.models  # noqa: F401
 from alembic import context
 from worknexus.config import get_settings
