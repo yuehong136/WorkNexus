@@ -31,6 +31,10 @@ class AuditAction(StrEnum):
     WORK_ITEM_RELATION_ADD = "work_item.relation.add"
     WORK_ITEM_RELATION_REMOVE = "work_item.relation.remove"
     SKILL_INVOKE = "skill.invoke"
+    AI_PROPOSED_ACTION_CREATE = "ai.proposed_action.create"
+    AGENT_ACTION_APPROVE = "agent_action.approve"
+    AGENT_ACTION_REJECT = "agent_action.reject"
+    AGENT_ACTION_EXECUTE = "agent_action.execute"
 
 
 async def record(

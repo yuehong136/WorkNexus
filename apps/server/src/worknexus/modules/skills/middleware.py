@@ -21,6 +21,7 @@ from typing import Any, Literal
 from fastmcp.exceptions import ToolError
 from fastmcp.server.dependencies import get_http_headers
 from fastmcp.server.middleware import Middleware, MiddlewareContext
+from fastmcp.tools import ToolResult
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from worknexus.config import get_settings
@@ -87,7 +88,7 @@ def _redact(text: str) -> str:
 
 @dataclass(frozen=True)
 class Decision:
-    action: Literal["allow", "blocked", "rejected"]
+    action: Literal["allow", "defer", "rejected"]
     status: SkillInvocationStatus
     error_code: ErrorCode | None = None
     message: str = ""
@@ -98,7 +99,9 @@ def decide_execution(
     required_permission: Permission | None,
     permissions_snapshot: dict[str, Any],
 ) -> Decision:
-    """D5 double-check (M4 subset): user ∧ agent (effective) ∧ risk. Confirmation is M5."""
+    """D5 double-check: user ∧ agent (effective) ∧ risk. A permitted low_write tool call
+    is deferred into a pending AgentAction (M5) rather than blocked; the human confirms it
+    before any write. high_write and missing permission are rejected outright."""
     if risk is None:
         return Decision("rejected", SkillInvocationStatus.REJECTED, ErrorCode.FORBIDDEN, "unknown tool risk level")
     if risk == RiskLevel.HIGH_WRITE:
@@ -112,12 +115,7 @@ def decide_execution(
     if required_permission is not None and required_permission.value not in effective:
         return Decision("rejected", SkillInvocationStatus.REJECTED, ErrorCode.FORBIDDEN, "permission denied")
     if risk == RiskLevel.LOW_WRITE:
-        return Decision(
-            "blocked",
-            SkillInvocationStatus.BLOCKED,
-            ErrorCode.SKILL_CONFIRMATION_REQUIRED,
-            "requires AgentAction confirmation (available in M5)",
-        )
+        return Decision("defer", SkillInvocationStatus.SUCCESS)
     return Decision("allow", SkillInvocationStatus.RUNNING)
 
 
@@ -177,10 +175,47 @@ class SkillInvocationMiddleware(Middleware):
                 input_summary=summarize(arguments),
             )
 
-            if decision.action != "allow":
+            if decision.action == "rejected":
                 await service.finish_invocation(log_db, inv, status=decision.status, error_message=decision.message)
                 await log_db.commit()
                 raise ToolError(decision.message)
+
+            if decision.action == "defer":
+                # Permitted low_write call: normalize it into a pending AgentAction for human
+                # confirmation instead of executing. Return a normal result so the model can
+                # tell the user it's queued (M5 — replaces M4's "blocked" ToolError).
+                from worknexus.modules.workchat import service as workchat_service
+
+                try:
+                    action = await workchat_service.create_pending_agent_action(
+                        log_db,
+                        delegation,
+                        tool_name=tool_name,
+                        arguments=dict(arguments),
+                        skill_invocation_id=inv.id,
+                    )
+                except BizError as exc:
+                    await service.finish_invocation(
+                        log_db, inv, status=SkillInvocationStatus.FAILED, error_message=exc.message
+                    )
+                    await log_db.commit()
+                    raise ToolError(exc.message) from exc
+                inv.agent_action_id = action.id
+                await service.finish_invocation(
+                    log_db, inv, status=decision.status, output_summary=f"pending agent_action {action.id}"
+                )
+                await log_db.commit()
+                return ToolResult(
+                    content=(
+                        f"Action queued for human confirmation in WorkNexus (agent_action {action.id}); "
+                        "not yet executed."
+                    ),
+                    structured_content={
+                        "status": "pending_confirmation",
+                        "agentActionId": action.id,
+                        "requiresConfirmation": True,
+                    },
+                )
 
             async with open_session() as business_db:
                 token = set_mcp_context(MCPCallContext(db=business_db, actor=actor, delegation=delegation))

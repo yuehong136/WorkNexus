@@ -22,6 +22,8 @@ class Settings(BaseSettings):
     session_cookie_name: str = "worknexus_session"
     session_ttl_days: int = 7
     delegation_token_ttl_seconds: int = Field(default=600, ge=300, le=600)
+    # How long a pending AgentAction stays confirmable before it lapses to `expired`.
+    agent_action_pending_ttl_seconds: int = Field(default=604800, ge=300)
     bcrypt_rounds: int = 12
     invite_ttl_days: int = 7
 
