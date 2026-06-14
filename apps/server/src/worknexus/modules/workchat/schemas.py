@@ -18,6 +18,7 @@ __all__ = [
     "MessageOut",
     "MessageRole",
     "RiskLevel",
+    "RunCreateIn",
 ]
 
 
@@ -74,6 +75,13 @@ class MessageOut(ApiModel):
 
 class MessageCreateIn(ApiModel):
     content: str = Field(min_length=1)
+
+
+class RunCreateIn(ApiModel):
+    conversation_id: str
+    content: str = Field(min_length=1)
+    # Work items the user explicitly references; filtered by read permission before context.
+    work_item_ids: list[str] | None = None
 
 
 class AgentActionOut(ApiModel):

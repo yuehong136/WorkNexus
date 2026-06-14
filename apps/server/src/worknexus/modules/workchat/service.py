@@ -112,7 +112,7 @@ async def list_conversations(db: AsyncSession, actor: Actor, project_id: str) ->
     return [ConversationOut.model_validate(conversation)]
 
 
-async def _get_conversation(db: AsyncSession, actor: Actor, conversation_id: str) -> Conversation:
+async def get_conversation(db: AsyncSession, actor: Actor, conversation_id: str) -> Conversation:
     conversation = await db.get(Conversation, conversation_id)
     if conversation is None or conversation.tenant_id != actor.tenant_id or conversation.deleted_at is not None:
         raise BizError(ErrorCode.CONVERSATION_NOT_FOUND, "conversation not found")
@@ -125,7 +125,7 @@ async def _get_conversation(db: AsyncSession, actor: Actor, conversation_id: str
 async def list_messages(
     db: AsyncSession, actor: Actor, conversation_id: str, *, params: PageParams
 ) -> tuple[list[MessageOut], int]:
-    await _get_conversation(db, actor, conversation_id)
+    await get_conversation(db, actor, conversation_id)
     base = select(Message).where(Message.conversation_id == conversation_id)
     total = (await db.execute(select(func.count()).select_from(base.subquery()))).scalar_one()
     rows = (
@@ -140,7 +140,7 @@ async def list_messages(
 async def create_user_message(
     db: AsyncSession, actor: Actor, conversation_id: str, data: MessageCreateIn
 ) -> MessageOut:
-    await _get_conversation(db, actor, conversation_id)
+    await get_conversation(db, actor, conversation_id)
     message = Message(
         tenant_id=actor.tenant_id,
         conversation_id=conversation_id,
@@ -152,6 +152,57 @@ async def create_user_message(
     await db.commit()
     await db.refresh(message)
     return MessageOut.model_validate(message)
+
+
+async def create_ai_message(
+    db: AsyncSession,
+    actor: Actor,
+    conversation_id: str,
+    *,
+    content: str,
+    run_id: str,
+    agent_action_id: str | None = None,
+    work_item_id: str | None = None,
+    knowledge_refs: list[dict[str, Any]] | None = None,
+) -> Message:
+    """Persist the AI turn at the end of a run. `created_by` is null (authored by the agent)."""
+    message = Message(
+        tenant_id=actor.tenant_id,
+        conversation_id=conversation_id,
+        role=MessageRole.AI,
+        content=content,
+        run_id=run_id,
+        agent_action_id=agent_action_id,
+        work_item_id=work_item_id,
+        knowledge_refs=knowledge_refs,
+    )
+    db.add(message)
+    await db.commit()
+    await db.refresh(message)
+    return message
+
+
+async def get_run(db: AsyncSession, actor: Actor, run_id: str) -> list[MessageOut]:
+    """Compensation read after a dropped SSE connection: the messages of one run, scoped
+    to a conversation the caller can access."""
+    rows = (
+        (
+            await db.execute(
+                select(Message)
+                .where(Message.tenant_id == actor.tenant_id, Message.run_id == run_id)
+                .order_by(Message.created_at)
+            )
+        )
+        .scalars()
+        .all()
+    )
+    if not rows:
+        raise BizError(ErrorCode.WORKCHAT_RUN_NOT_FOUND, "run not found")
+    conversation = await get_conversation(db, actor, rows[0].conversation_id)
+    subject = await load_subject(db, actor)
+    if not can(subject, Permission.WORKCHAT_USE, Scope(type=ScopeType.PROJECT, project_id=conversation.project_id)):
+        raise BizError(ErrorCode.FORBIDDEN, "permission denied")
+    return [MessageOut.model_validate(m) for m in rows]
 
 
 # --- agent actions: propose ------------------------------------------------------
