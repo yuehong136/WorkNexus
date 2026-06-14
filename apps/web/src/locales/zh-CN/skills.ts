@@ -3,7 +3,7 @@ export default {
   description: 'AI 通过 MCP 调用 WorkNexus 的技能、风险等级与调用留痕',
   skillsSection: {
     title: '已注册 Skills',
-    description: '由 MCP 组合层反射；写工具需 M5 AgentAction 确认后才会执行',
+    description: '由 MCP 组合层反射；写工具需经 AgentAction 人工确认后才会执行',
     error: '加载 Skills 失败',
   },
   invocationsSection: {
@@ -12,7 +12,7 @@ export default {
   },
   executable: {
     yes: '可执行',
-    no: '需 M5 确认',
+    no: '需确认',
   },
   risk: {
     read: '只读',
