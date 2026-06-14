@@ -5,6 +5,7 @@ filtering, and surfacing a server-created AgentAction.
 from types import SimpleNamespace
 
 import pytest
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from worknexus.core.access import Subject, load_subject
@@ -45,7 +46,7 @@ async def test_start_run_persists_user_and_ai_messages(db: AsyncSession, initial
             content="hi",
             work_item_ids=None,
             ai_client=client,
-            agent_id=initialized.agent.id,
+            agent=runs.ResolvedAgent(internal_agent_id=initialized.agent.id, external_agent_id="multirag-ext-1"),
             run_id="run_1",
         )
     ]
@@ -101,7 +102,7 @@ async def test_start_run_surfaces_pending_agent_action(db: AsyncSession, initial
             content="make a task",
             work_item_ids=None,
             ai_client=client,
-            agent_id=initialized.agent.id,
+            agent=runs.ResolvedAgent(internal_agent_id=initialized.agent.id, external_agent_id="multirag-ext-1"),
             run_id="run_2",
         )
     ]
@@ -115,9 +116,7 @@ async def test_start_run_surfaces_pending_agent_action(db: AsyncSession, initial
     assert ai_message.agent_action_id == action.id
 
 
-async def test_start_run_propose_action_creates_and_surfaces(
-    db: AsyncSession, initialized: SimpleNamespace
-) -> None:
+async def test_start_run_propose_action_creates_and_surfaces(db: AsyncSession, initialized: SimpleNamespace) -> None:
     _, subject, conversation = await _setup(db, initialized)
     # The default fake script emits a ProposeAction (the E2E/offline affordance).
     client = FakeAIClient()
@@ -130,7 +129,7 @@ async def test_start_run_propose_action_creates_and_surfaces(
             content="make a task",
             work_item_ids=None,
             ai_client=client,
-            agent_id=initialized.agent.id,
+            agent=runs.ResolvedAgent(internal_agent_id=initialized.agent.id, external_agent_id="multirag-ext-1"),
             run_id="run_propose",
         )
     ]
@@ -152,7 +151,7 @@ async def test_start_run_emits_error_event(db: AsyncSession, initialized: Simple
             content="hi",
             work_item_ids=None,
             ai_client=client,
-            agent_id=initialized.agent.id,
+            agent=runs.ResolvedAgent(internal_agent_id=initialized.agent.id, external_agent_id="multirag-ext-1"),
             run_id="run_3",
         )
     ]
@@ -190,10 +189,84 @@ async def test_build_context_excludes_data_user_cannot_read(
     assert "workItems" not in context
 
 
-async def test_resolve_agent_id_falls_back_to_active_agent(db: AsyncSession, initialized: SimpleNamespace) -> None:
+async def test_resolve_agent_matches_configured_external_id(db: AsyncSession, initialized: SimpleNamespace) -> None:
     from worknexus.config import get_settings
 
-    actor = _user_actor(initialized)
-    # default agent id is unset in tests → resolver falls back to the tenant's active agent.
-    resolved = await runs.resolve_agent_id(db, actor, get_settings())
-    assert resolved == initialized.agent.id
+    initialized.agent.external_agent_id = "multirag-ext-1"
+    await db.commit()
+    settings = get_settings().model_copy(
+        update={"ai_platform_default_agent_id": "multirag-ext-1", "ai_client": "multirag"}
+    )
+    resolved = await runs.resolve_agent(db, _user_actor(initialized), settings)
+    assert resolved.internal_agent_id == initialized.agent.id  # WorkNexus security principal
+    assert resolved.external_agent_id == "multirag-ext-1"  # multirag completions target
+
+
+async def test_resolve_agent_falls_back_to_agent_with_external_id(
+    db: AsyncSession, initialized: SimpleNamespace
+) -> None:
+    from worknexus.config import get_settings
+
+    initialized.agent.external_agent_id = "multirag-ext-2"
+    await db.commit()
+    # configured id is unset → fall back to the first active agent that has an external id.
+    settings = get_settings().model_copy(update={"ai_platform_default_agent_id": "", "ai_client": "multirag"})
+    resolved = await runs.resolve_agent(db, _user_actor(initialized), settings)
+    assert resolved.internal_agent_id == initialized.agent.id
+    assert resolved.external_agent_id == "multirag-ext-2"
+
+
+async def test_resolve_agent_raises_without_external_id_in_multirag_mode(
+    db: AsyncSession, initialized: SimpleNamespace
+) -> None:
+    from worknexus.config import get_settings
+    from worknexus.core.errors import BizError, ErrorCode
+
+    # setup leaves external_agent_id null when no default agent id is configured.
+    settings = get_settings().model_copy(update={"ai_platform_default_agent_id": "", "ai_client": "multirag"})
+    with pytest.raises(BizError) as exc:
+        await runs.resolve_agent(db, _user_actor(initialized), settings)
+    assert exc.value.code == ErrorCode.AI_PLATFORM_UNAVAILABLE
+
+
+async def test_resolve_agent_fake_mode_runs_on_internal_id(db: AsyncSession, initialized: SimpleNamespace) -> None:
+    from worknexus.config import get_settings
+
+    settings = get_settings().model_copy(update={"ai_platform_default_agent_id": "", "ai_client": "fake"})
+    resolved = await runs.resolve_agent(db, _user_actor(initialized), settings)
+    assert resolved.internal_agent_id == initialized.agent.id
+    assert resolved.external_agent_id == initialized.agent.id  # placeholder; the fake ignores it
+
+
+async def test_start_run_signs_delegation_with_internal_id_and_calls_external(
+    db: AsyncSession, initialized: SimpleNamespace
+) -> None:
+    from worknexus.modules.identity.models import McpDelegationToken
+
+    _, subject, conversation = await _setup(db, initialized)
+
+    captured: dict[str, str] = {}
+
+    class _CapturingClient:
+        async def stream_run(self, *, messages, context, delegation_token, agent_id):  # type: ignore[no-untyped-def]
+            captured["agent_id"] = agent_id
+            yield DoneEvent()
+
+    agent = runs.ResolvedAgent(internal_agent_id=initialized.agent.id, external_agent_id="multirag-ext-9")
+    async for _ in runs.start_run(
+        db,
+        subject,
+        conversation=conversation,
+        content="hi",
+        work_item_ids=None,
+        ai_client=_CapturingClient(),
+        agent=agent,
+        run_id="run_split",
+    ):
+        pass
+
+    # The AIClient is called with the external (multirag) id...
+    assert captured["agent_id"] == "multirag-ext-9"
+    # ...while the delegation token binds the internal (WorkNexus) agent id.
+    token = (await db.execute(select(McpDelegationToken).where(McpDelegationToken.run_id == "run_split"))).scalar_one()
+    assert token.agent_id == initialized.agent.id

@@ -8,6 +8,7 @@ stream (that would bypass the dual-token gate).
 """
 
 from collections.abc import AsyncIterator
+from dataclasses import dataclass
 from typing import Any
 
 from sqlalchemy import select
@@ -41,24 +42,56 @@ _HISTORY_LIMIT = 20
 _AI_ROLE = {MessageRole.AI: "assistant", MessageRole.USER: "user", MessageRole.SYSTEM: "system"}
 
 
-async def resolve_agent_id(db: AsyncSession, actor: Actor, settings: Settings) -> str:
-    """Prefer the configured default agent; fall back to the tenant's first active agent."""
-    configured = settings.ai_platform_default_agent_id
-    if configured:
-        agent = await db.get(AIAgent, configured)
-        if agent is not None and agent.tenant_id == actor.tenant_id and agent.status == AgentStatus.ACTIVE:
-            return configured
-    row = (
-        await db.execute(
-            select(AIAgent.id)
-            .where(AIAgent.tenant_id == actor.tenant_id, AIAgent.status == AgentStatus.ACTIVE)
-            .order_by(AIAgent.created_at)
-            .limit(1)
+@dataclass(frozen=True)
+class ResolvedAgent:
+    """Two distinct identities for one AI turn (WorkNexus governs AI identity; multirag runs
+    the model). `internal_agent_id` is the WorkNexus `ai_agents.id` — the local security
+    principal used for delegation, permission checks, AgentAction/SkillInvocation/audit
+    attribution. `external_agent_id` is `ai_agents.external_agent_id` — the multirag agent id
+    used in the `/api/v1/agents/{id}/completions` URL. They are never the same value in a real
+    deployment."""
+
+    internal_agent_id: str
+    external_agent_id: str
+
+
+async def resolve_agent(db: AsyncSession, actor: Actor, settings: Settings) -> ResolvedAgent:
+    """Pick the tenant's AI agent and return both its internal and external ids.
+
+    `WORKNEXUS_AI_PLATFORM_DEFAULT_AGENT_ID` is the multirag *external* agent id (setup stores
+    it in `ai_agents.external_agent_id`). Preference: the active agent matching that external id,
+    then the first active agent that has any external id, then the first active agent. Without an
+    external id, real multirag cannot be called → AI_PLATFORM_UNAVAILABLE; the fake client only
+    needs a placeholder, so it runs on the internal id."""
+    agents = (
+        (
+            await db.execute(
+                select(AIAgent)
+                .where(AIAgent.tenant_id == actor.tenant_id, AIAgent.status == AgentStatus.ACTIVE)
+                .order_by(AIAgent.created_at)
+            )
         )
-    ).scalar_one_or_none()
-    if row is None:
-        raise BizError(ErrorCode.AI_PLATFORM_UNAVAILABLE, "no AI agent is configured for this tenant")
-    return row
+        .scalars()
+        .all()
+    )
+    if not agents:
+        raise BizError(ErrorCode.AI_PLATFORM_UNAVAILABLE, "no active AI agent is configured for this tenant")
+
+    configured_external = settings.ai_platform_default_agent_id
+    agent = next((a for a in agents if configured_external and a.external_agent_id == configured_external), None)
+    if agent is None:
+        agent = next((a for a in agents if a.external_agent_id), agents[0])
+
+    external = agent.external_agent_id
+    if not external:
+        if settings.ai_client == "fake":
+            external = agent.id  # the fake client ignores it; keeps tests/E2E running
+        else:
+            raise BizError(
+                ErrorCode.AI_PLATFORM_UNAVAILABLE,
+                "the AI agent has no external (multirag) agent id; set WORKNEXUS_AI_PLATFORM_DEFAULT_AGENT_ID",
+            )
+    return ResolvedAgent(internal_agent_id=agent.id, external_agent_id=external)
 
 
 async def build_context(
@@ -118,12 +151,15 @@ async def start_run(
     content: str,
     work_item_ids: list[str] | None,
     ai_client: AIClient,
-    agent_id: str,
+    agent: ResolvedAgent,
     run_id: str,
 ) -> AsyncIterator[dict[str, Any]]:
     """Drive one AI turn, yielding WorkNexus SSE events. Validation (conversation exists,
     permission) is done by the caller before the response starts; everything here is
-    defensive — failures become an `error` event, never an aborted stream."""
+    defensive — failures become an `error` event, never an aborted stream.
+
+    Identity split: the delegation token binds the WorkNexus-internal agent id (the security
+    principal), while the multirag call targets the external agent id."""
     actor = subject.actor
     await service.create_user_message(db, actor, conversation.id, MessageCreateIn(content=content))
     messages, context = await build_context(db, subject, conversation, work_item_ids=work_item_ids)
@@ -136,13 +172,13 @@ async def start_run(
             db,
             actor,
             user_id=actor.id,
-            agent_id=agent_id,
+            agent_id=agent.internal_agent_id,
             project_id=conversation.project_id,
             conversation_id=conversation.id,
             run_id=run_id,
         )
         async for event in ai_client.stream_run(
-            messages=messages, context=context, delegation_token=issued.token, agent_id=agent_id
+            messages=messages, context=context, delegation_token=issued.token, agent_id=agent.external_agent_id
         ):
             if isinstance(event, TextDelta):
                 accumulated.append(event.content)
@@ -162,7 +198,7 @@ async def start_run(
                     DelegationContext(
                         tenant_id=actor.tenant_id,
                         user_id=actor.id,
-                        agent_id=agent_id,
+                        agent_id=agent.internal_agent_id,
                         project_id=conversation.project_id,
                         conversation_id=conversation.id,
                         run_id=run_id,
