@@ -20,7 +20,9 @@ import type {
 
 import type {
   AcceptInviteIn,
+  AgentActionRejectIn,
   CommentCreateIn,
+  EnvelopeAgentActionOut,
   EnvelopeCommentOut,
   EnvelopeCurrentUserContext,
   EnvelopeInviteCreatedOut,
@@ -28,11 +30,16 @@ import type {
   EnvelopeInvitePreviewOut,
   EnvelopeListActivityOut,
   EnvelopeListCommentOut,
+  EnvelopeListConversationOut,
+  EnvelopeListMessageOut,
   EnvelopeListProjectMemberOut,
   EnvelopeListRelationOut,
   EnvelopeListSkillOut,
+  EnvelopeMessageOut,
   EnvelopeNoneType,
+  EnvelopePageAgentActionOut,
   EnvelopePageInviteOut,
+  EnvelopePageMessageOut,
   EnvelopePageProjectOut,
   EnvelopePageSkillInvocationOut,
   EnvelopePageUserListOut,
@@ -47,17 +54,21 @@ import type {
   GetHealth200,
   HTTPValidationError,
   InviteCreateIn,
+  ListAgentActionsParams,
   ListInvitesParams,
+  ListMessagesParams,
   ListProjectsParams,
   ListSkillInvocationsParams,
   ListUsersParams,
   ListWorkItemsParams,
   LoginIn,
+  MessageCreateIn,
   ProjectCreateIn,
   ProjectMemberAddIn,
   ProjectMemberUpdateIn,
   ProjectUpdateIn,
   RelationCreateIn,
+  RunCreateIn,
   SetupIn,
   WorkItemCreateIn,
   WorkItemTransitionIn,
@@ -3518,3 +3529,865 @@ export function useGetSkillInvocation<TData = Awaited<ReturnType<typeof getSkill
 
   return query;
 }
+
+
+
+
+/**
+ * @summary List Conversations
+ */
+export type listConversationsResponse200 = {
+  data: EnvelopeListConversationOut
+  status: 200
+}
+
+export type listConversationsResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+    
+export type listConversationsResponseSuccess = (listConversationsResponse200) & {
+  headers: Headers;
+};
+export type listConversationsResponseError = (listConversationsResponse422) & {
+  headers: Headers;
+};
+
+export type listConversationsResponse = (listConversationsResponseSuccess | listConversationsResponseError)
+
+export const getListConversationsUrl = (projectId: string,) => {
+
+
+  
+
+  return `/api/v1/projects/${projectId}/conversations`
+}
+
+export const listConversations = async (projectId: string, options?: RequestInit): Promise<listConversationsResponse> => {
+  
+  return apiMutator<listConversationsResponse>(getListConversationsUrl(projectId),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+
+
+export const getListConversationsQueryKey = (projectId?: string,) => {
+    return [
+    `/api/v1/projects/${projectId}/conversations`
+    ] as const;
+    }
+
+    
+export const getListConversationsQueryOptions = <TData = Awaited<ReturnType<typeof listConversations>>, TError = HTTPValidationError>(projectId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listConversations>>, TError, TData>, request?: SecondParameter<typeof apiMutator>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListConversationsQueryKey(projectId);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listConversations>>> = ({ signal }) => listConversations(projectId, { signal, ...requestOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(projectId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listConversations>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListConversationsQueryResult = NonNullable<Awaited<ReturnType<typeof listConversations>>>
+export type ListConversationsQueryError = HTTPValidationError
+
+
+/**
+ * @summary List Conversations
+ */
+
+export function useListConversations<TData = Awaited<ReturnType<typeof listConversations>>, TError = HTTPValidationError>(
+ projectId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listConversations>>, TError, TData>, request?: SecondParameter<typeof apiMutator>}
+  
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListConversationsQueryOptions(projectId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * @summary List Messages
+ */
+export type listMessagesResponse200 = {
+  data: EnvelopePageMessageOut
+  status: 200
+}
+
+export type listMessagesResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+    
+export type listMessagesResponseSuccess = (listMessagesResponse200) & {
+  headers: Headers;
+};
+export type listMessagesResponseError = (listMessagesResponse422) & {
+  headers: Headers;
+};
+
+export type listMessagesResponse = (listMessagesResponseSuccess | listMessagesResponseError)
+
+export const getListMessagesUrl = (conversationId: string,
+    params?: ListMessagesParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/v1/conversations/${conversationId}/messages?${stringifiedParams}` : `/api/v1/conversations/${conversationId}/messages`
+}
+
+export const listMessages = async (conversationId: string,
+    params?: ListMessagesParams, options?: RequestInit): Promise<listMessagesResponse> => {
+  
+  return apiMutator<listMessagesResponse>(getListMessagesUrl(conversationId,params),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+
+
+export const getListMessagesQueryKey = (conversationId?: string,
+    params?: ListMessagesParams,) => {
+    return [
+    `/api/v1/conversations/${conversationId}/messages`, ...(params ? [params]: [])
+    ] as const;
+    }
+
+    
+export const getListMessagesQueryOptions = <TData = Awaited<ReturnType<typeof listMessages>>, TError = HTTPValidationError>(conversationId: string,
+    params?: ListMessagesParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listMessages>>, TError, TData>, request?: SecondParameter<typeof apiMutator>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListMessagesQueryKey(conversationId,params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listMessages>>> = ({ signal }) => listMessages(conversationId,params, { signal, ...requestOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(conversationId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listMessages>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListMessagesQueryResult = NonNullable<Awaited<ReturnType<typeof listMessages>>>
+export type ListMessagesQueryError = HTTPValidationError
+
+
+/**
+ * @summary List Messages
+ */
+
+export function useListMessages<TData = Awaited<ReturnType<typeof listMessages>>, TError = HTTPValidationError>(
+ conversationId: string,
+    params?: ListMessagesParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listMessages>>, TError, TData>, request?: SecondParameter<typeof apiMutator>}
+  
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListMessagesQueryOptions(conversationId,params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * @summary Create Message
+ */
+export type createMessageResponse200 = {
+  data: EnvelopeMessageOut
+  status: 200
+}
+
+export type createMessageResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+    
+export type createMessageResponseSuccess = (createMessageResponse200) & {
+  headers: Headers;
+};
+export type createMessageResponseError = (createMessageResponse422) & {
+  headers: Headers;
+};
+
+export type createMessageResponse = (createMessageResponseSuccess | createMessageResponseError)
+
+export const getCreateMessageUrl = (conversationId: string,) => {
+
+
+  
+
+  return `/api/v1/conversations/${conversationId}/messages`
+}
+
+export const createMessage = async (conversationId: string,
+    messageCreateIn: MessageCreateIn, options?: RequestInit): Promise<createMessageResponse> => {
+  
+  return apiMutator<createMessageResponse>(getCreateMessageUrl(conversationId),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      messageCreateIn,)
+  }
+);}
+
+
+
+
+export const getCreateMessageMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createMessage>>, TError,{conversationId: string;data: MessageCreateIn}, TContext>, request?: SecondParameter<typeof apiMutator>}
+): UseMutationOptions<Awaited<ReturnType<typeof createMessage>>, TError,{conversationId: string;data: MessageCreateIn}, TContext> => {
+
+const mutationKey = ['createMessage'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createMessage>>, {conversationId: string;data: MessageCreateIn}> = (props) => {
+          const {conversationId,data} = props ?? {};
+
+          return  createMessage(conversationId,data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateMessageMutationResult = NonNullable<Awaited<ReturnType<typeof createMessage>>>
+    export type CreateMessageMutationBody = MessageCreateIn
+    export type CreateMessageMutationError = HTTPValidationError
+
+    /**
+ * @summary Create Message
+ */
+export const useCreateMessage = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createMessage>>, TError,{conversationId: string;data: MessageCreateIn}, TContext>, request?: SecondParameter<typeof apiMutator>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createMessage>>,
+        TError,
+        {conversationId: string;data: MessageCreateIn},
+        TContext
+      > => {
+
+      const mutationOptions = getCreateMessageMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+    
+/**
+ * @summary Create Run
+ */
+export type createRunResponse200 = {
+  data: unknown
+  status: 200
+}
+
+export type createRunResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+    
+export type createRunResponseSuccess = (createRunResponse200) & {
+  headers: Headers;
+};
+export type createRunResponseError = (createRunResponse422) & {
+  headers: Headers;
+};
+
+export type createRunResponse = (createRunResponseSuccess | createRunResponseError)
+
+export const getCreateRunUrl = () => {
+
+
+  
+
+  return `/api/v1/workchat/runs`
+}
+
+export const createRun = async (runCreateIn: RunCreateIn, options?: RequestInit): Promise<createRunResponse> => {
+  
+  return apiMutator<createRunResponse>(getCreateRunUrl(),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      runCreateIn,)
+  }
+);}
+
+
+
+
+export const getCreateRunMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createRun>>, TError,{data: RunCreateIn}, TContext>, request?: SecondParameter<typeof apiMutator>}
+): UseMutationOptions<Awaited<ReturnType<typeof createRun>>, TError,{data: RunCreateIn}, TContext> => {
+
+const mutationKey = ['createRun'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createRun>>, {data: RunCreateIn}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createRun(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateRunMutationResult = NonNullable<Awaited<ReturnType<typeof createRun>>>
+    export type CreateRunMutationBody = RunCreateIn
+    export type CreateRunMutationError = HTTPValidationError
+
+    /**
+ * @summary Create Run
+ */
+export const useCreateRun = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createRun>>, TError,{data: RunCreateIn}, TContext>, request?: SecondParameter<typeof apiMutator>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createRun>>,
+        TError,
+        {data: RunCreateIn},
+        TContext
+      > => {
+
+      const mutationOptions = getCreateRunMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+    
+/**
+ * @summary Get Run
+ */
+export type getRunResponse200 = {
+  data: EnvelopeListMessageOut
+  status: 200
+}
+
+export type getRunResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+    
+export type getRunResponseSuccess = (getRunResponse200) & {
+  headers: Headers;
+};
+export type getRunResponseError = (getRunResponse422) & {
+  headers: Headers;
+};
+
+export type getRunResponse = (getRunResponseSuccess | getRunResponseError)
+
+export const getGetRunUrl = (runId: string,) => {
+
+
+  
+
+  return `/api/v1/workchat/runs/${runId}`
+}
+
+export const getRun = async (runId: string, options?: RequestInit): Promise<getRunResponse> => {
+  
+  return apiMutator<getRunResponse>(getGetRunUrl(runId),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+
+
+export const getGetRunQueryKey = (runId?: string,) => {
+    return [
+    `/api/v1/workchat/runs/${runId}`
+    ] as const;
+    }
+
+    
+export const getGetRunQueryOptions = <TData = Awaited<ReturnType<typeof getRun>>, TError = HTTPValidationError>(runId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getRun>>, TError, TData>, request?: SecondParameter<typeof apiMutator>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetRunQueryKey(runId);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getRun>>> = ({ signal }) => getRun(runId, { signal, ...requestOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(runId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getRun>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetRunQueryResult = NonNullable<Awaited<ReturnType<typeof getRun>>>
+export type GetRunQueryError = HTTPValidationError
+
+
+/**
+ * @summary Get Run
+ */
+
+export function useGetRun<TData = Awaited<ReturnType<typeof getRun>>, TError = HTTPValidationError>(
+ runId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getRun>>, TError, TData>, request?: SecondParameter<typeof apiMutator>}
+  
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetRunQueryOptions(runId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * @summary List Agent Actions
+ */
+export type listAgentActionsResponse200 = {
+  data: EnvelopePageAgentActionOut
+  status: 200
+}
+
+export type listAgentActionsResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+    
+export type listAgentActionsResponseSuccess = (listAgentActionsResponse200) & {
+  headers: Headers;
+};
+export type listAgentActionsResponseError = (listAgentActionsResponse422) & {
+  headers: Headers;
+};
+
+export type listAgentActionsResponse = (listAgentActionsResponseSuccess | listAgentActionsResponseError)
+
+export const getListAgentActionsUrl = (params?: ListAgentActionsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/v1/agent-actions?${stringifiedParams}` : `/api/v1/agent-actions`
+}
+
+export const listAgentActions = async (params?: ListAgentActionsParams, options?: RequestInit): Promise<listAgentActionsResponse> => {
+  
+  return apiMutator<listAgentActionsResponse>(getListAgentActionsUrl(params),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+
+
+export const getListAgentActionsQueryKey = (params?: ListAgentActionsParams,) => {
+    return [
+    `/api/v1/agent-actions`, ...(params ? [params]: [])
+    ] as const;
+    }
+
+    
+export const getListAgentActionsQueryOptions = <TData = Awaited<ReturnType<typeof listAgentActions>>, TError = HTTPValidationError>(params?: ListAgentActionsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listAgentActions>>, TError, TData>, request?: SecondParameter<typeof apiMutator>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListAgentActionsQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listAgentActions>>> = ({ signal }) => listAgentActions(params, { signal, ...requestOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listAgentActions>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListAgentActionsQueryResult = NonNullable<Awaited<ReturnType<typeof listAgentActions>>>
+export type ListAgentActionsQueryError = HTTPValidationError
+
+
+/**
+ * @summary List Agent Actions
+ */
+
+export function useListAgentActions<TData = Awaited<ReturnType<typeof listAgentActions>>, TError = HTTPValidationError>(
+ params?: ListAgentActionsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listAgentActions>>, TError, TData>, request?: SecondParameter<typeof apiMutator>}
+  
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListAgentActionsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * @summary Get Agent Action
+ */
+export type getAgentActionResponse200 = {
+  data: EnvelopeAgentActionOut
+  status: 200
+}
+
+export type getAgentActionResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+    
+export type getAgentActionResponseSuccess = (getAgentActionResponse200) & {
+  headers: Headers;
+};
+export type getAgentActionResponseError = (getAgentActionResponse422) & {
+  headers: Headers;
+};
+
+export type getAgentActionResponse = (getAgentActionResponseSuccess | getAgentActionResponseError)
+
+export const getGetAgentActionUrl = (agentActionId: string,) => {
+
+
+  
+
+  return `/api/v1/agent-actions/${agentActionId}`
+}
+
+export const getAgentAction = async (agentActionId: string, options?: RequestInit): Promise<getAgentActionResponse> => {
+  
+  return apiMutator<getAgentActionResponse>(getGetAgentActionUrl(agentActionId),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+
+
+export const getGetAgentActionQueryKey = (agentActionId?: string,) => {
+    return [
+    `/api/v1/agent-actions/${agentActionId}`
+    ] as const;
+    }
+
+    
+export const getGetAgentActionQueryOptions = <TData = Awaited<ReturnType<typeof getAgentAction>>, TError = HTTPValidationError>(agentActionId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAgentAction>>, TError, TData>, request?: SecondParameter<typeof apiMutator>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetAgentActionQueryKey(agentActionId);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAgentAction>>> = ({ signal }) => getAgentAction(agentActionId, { signal, ...requestOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(agentActionId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAgentAction>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetAgentActionQueryResult = NonNullable<Awaited<ReturnType<typeof getAgentAction>>>
+export type GetAgentActionQueryError = HTTPValidationError
+
+
+/**
+ * @summary Get Agent Action
+ */
+
+export function useGetAgentAction<TData = Awaited<ReturnType<typeof getAgentAction>>, TError = HTTPValidationError>(
+ agentActionId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAgentAction>>, TError, TData>, request?: SecondParameter<typeof apiMutator>}
+  
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetAgentActionQueryOptions(agentActionId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * @summary Approve Agent Action
+ */
+export type approveAgentActionResponse200 = {
+  data: EnvelopeAgentActionOut
+  status: 200
+}
+
+export type approveAgentActionResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+    
+export type approveAgentActionResponseSuccess = (approveAgentActionResponse200) & {
+  headers: Headers;
+};
+export type approveAgentActionResponseError = (approveAgentActionResponse422) & {
+  headers: Headers;
+};
+
+export type approveAgentActionResponse = (approveAgentActionResponseSuccess | approveAgentActionResponseError)
+
+export const getApproveAgentActionUrl = (agentActionId: string,) => {
+
+
+  
+
+  return `/api/v1/agent-actions/${agentActionId}/approve`
+}
+
+export const approveAgentAction = async (agentActionId: string, options?: RequestInit): Promise<approveAgentActionResponse> => {
+  
+  return apiMutator<approveAgentActionResponse>(getApproveAgentActionUrl(agentActionId),
+  {      
+    ...options,
+    method: 'POST'
+    
+    
+  }
+);}
+
+
+
+
+export const getApproveAgentActionMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof approveAgentAction>>, TError,{agentActionId: string}, TContext>, request?: SecondParameter<typeof apiMutator>}
+): UseMutationOptions<Awaited<ReturnType<typeof approveAgentAction>>, TError,{agentActionId: string}, TContext> => {
+
+const mutationKey = ['approveAgentAction'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof approveAgentAction>>, {agentActionId: string}> = (props) => {
+          const {agentActionId} = props ?? {};
+
+          return  approveAgentAction(agentActionId,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ApproveAgentActionMutationResult = NonNullable<Awaited<ReturnType<typeof approveAgentAction>>>
+    
+    export type ApproveAgentActionMutationError = HTTPValidationError
+
+    /**
+ * @summary Approve Agent Action
+ */
+export const useApproveAgentAction = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof approveAgentAction>>, TError,{agentActionId: string}, TContext>, request?: SecondParameter<typeof apiMutator>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof approveAgentAction>>,
+        TError,
+        {agentActionId: string},
+        TContext
+      > => {
+
+      const mutationOptions = getApproveAgentActionMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+    
+/**
+ * @summary Reject Agent Action
+ */
+export type rejectAgentActionResponse200 = {
+  data: EnvelopeAgentActionOut
+  status: 200
+}
+
+export type rejectAgentActionResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+    
+export type rejectAgentActionResponseSuccess = (rejectAgentActionResponse200) & {
+  headers: Headers;
+};
+export type rejectAgentActionResponseError = (rejectAgentActionResponse422) & {
+  headers: Headers;
+};
+
+export type rejectAgentActionResponse = (rejectAgentActionResponseSuccess | rejectAgentActionResponseError)
+
+export const getRejectAgentActionUrl = (agentActionId: string,) => {
+
+
+  
+
+  return `/api/v1/agent-actions/${agentActionId}/reject`
+}
+
+export const rejectAgentAction = async (agentActionId: string,
+    agentActionRejectIn: AgentActionRejectIn, options?: RequestInit): Promise<rejectAgentActionResponse> => {
+  
+  return apiMutator<rejectAgentActionResponse>(getRejectAgentActionUrl(agentActionId),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      agentActionRejectIn,)
+  }
+);}
+
+
+
+
+export const getRejectAgentActionMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof rejectAgentAction>>, TError,{agentActionId: string;data: AgentActionRejectIn}, TContext>, request?: SecondParameter<typeof apiMutator>}
+): UseMutationOptions<Awaited<ReturnType<typeof rejectAgentAction>>, TError,{agentActionId: string;data: AgentActionRejectIn}, TContext> => {
+
+const mutationKey = ['rejectAgentAction'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof rejectAgentAction>>, {agentActionId: string;data: AgentActionRejectIn}> = (props) => {
+          const {agentActionId,data} = props ?? {};
+
+          return  rejectAgentAction(agentActionId,data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RejectAgentActionMutationResult = NonNullable<Awaited<ReturnType<typeof rejectAgentAction>>>
+    export type RejectAgentActionMutationBody = AgentActionRejectIn
+    export type RejectAgentActionMutationError = HTTPValidationError
+
+    /**
+ * @summary Reject Agent Action
+ */
+export const useRejectAgentAction = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof rejectAgentAction>>, TError,{agentActionId: string;data: AgentActionRejectIn}, TContext>, request?: SecondParameter<typeof apiMutator>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof rejectAgentAction>>,
+        TError,
+        {agentActionId: string;data: AgentActionRejectIn},
+        TContext
+      > => {
+
+      const mutationOptions = getRejectAgentActionMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
