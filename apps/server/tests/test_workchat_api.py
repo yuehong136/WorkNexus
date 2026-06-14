@@ -86,11 +86,14 @@ async def test_reject_agent_action(owner_client: AsyncClient, db: AsyncSession, 
 
 
 async def test_run_streams_sse(
-    owner_client: AsyncClient, monkeypatch: pytest.MonkeyPatch, initialized: SimpleNamespace
+    owner_client: AsyncClient, db: AsyncSession, monkeypatch: pytest.MonkeyPatch, initialized: SimpleNamespace
 ) -> None:
     from worknexus.modules.workchat import router as workchat_router
     from worknexus.modules.workchat.ai_client import DoneEvent, FakeAIClient, TextDelta
 
+    # Default settings are multirag mode, so the resolved agent needs an external id.
+    initialized.agent.external_agent_id = "multirag-ext-test"
+    await db.commit()
     monkeypatch.setattr(workchat_router, "get_ai_client", lambda settings: FakeAIClient([TextDelta("hi"), DoneEvent()]))
     project_id = initialized.project.id
     conversation_id = (await owner_client.get(f"/api/v1/projects/{project_id}/conversations")).json()["data"][0]["id"]

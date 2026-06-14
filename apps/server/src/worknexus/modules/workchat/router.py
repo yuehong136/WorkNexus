@@ -81,7 +81,7 @@ async def create_run(
     if not can(subject, Permission.WORKCHAT_USE, scope):
         raise BizError(ErrorCode.FORBIDDEN, "permission denied")
     settings = get_settings()
-    agent_id = await runs.resolve_agent_id(db, subject.actor, settings)
+    agent = await runs.resolve_agent(db, subject.actor, settings)
     run_id = uuid.uuid4().hex
     events = runs.start_run(
         db,
@@ -90,7 +90,7 @@ async def create_run(
         content=payload.content,
         work_item_ids=payload.work_item_ids,
         ai_client=get_ai_client(settings),
-        agent_id=agent_id,
+        agent=agent,
         run_id=run_id,
     )
     return StreamingResponse(
