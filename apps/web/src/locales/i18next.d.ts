@@ -3,6 +3,7 @@ import type common from './zh-CN/common'
 import type projects from './zh-CN/projects'
 import type settings from './zh-CN/settings'
 import type skills from './zh-CN/skills'
+import type workchat from './zh-CN/workchat'
 import type workItems from './zh-CN/workItems'
 
 declare module 'i18next' {
@@ -15,6 +16,7 @@ declare module 'i18next' {
       projects: typeof projects
       workItems: typeof workItems
       skills: typeof skills
+      workchat: typeof workchat
     }
   }
 }

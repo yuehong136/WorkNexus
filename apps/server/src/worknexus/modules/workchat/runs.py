@@ -20,7 +20,7 @@ from worknexus.core.errors import BizError, ErrorCode
 from worknexus.core.pagination import PageParams
 from worknexus.modules.identity import service as identity_service
 from worknexus.modules.identity.models import AIAgent
-from worknexus.modules.identity.schemas import AgentStatus
+from worknexus.modules.identity.schemas import AgentStatus, DelegationContext
 from worknexus.modules.projects import service as projects_service
 from worknexus.modules.work_items.models import WorkItem
 from worknexus.modules.workchat import service
@@ -29,6 +29,7 @@ from worknexus.modules.workchat.ai_client import (
     DoneEvent,
     ErrorEvent,
     KnowledgeEvent,
+    ProposeAction,
     TextDelta,
     ToolResultEvent,
 )
@@ -153,6 +154,29 @@ async def start_run(
                     if action is not None:
                         surfaced_action_id = surfaced_action_id or str(action["id"])
                         yield {"type": "agent_action", "action": action}
+            elif isinstance(event, ProposeAction):
+                # Fake/E2E only: the real path creates the action in the gated /mcp
+                # middleware and surfaces it via ToolResultEvent above.
+                created = await service.create_pending_agent_action(
+                    db,
+                    DelegationContext(
+                        tenant_id=actor.tenant_id,
+                        user_id=actor.id,
+                        agent_id=agent_id,
+                        project_id=conversation.project_id,
+                        conversation_id=conversation.id,
+                        run_id=run_id,
+                        permissions_snapshot={},
+                    ),
+                    tool_name=event.tool_name,
+                    arguments=event.arguments,
+                    skill_invocation_id=None,
+                )
+                await db.commit()
+                action = await _safe_agent_action(db, actor, created.id)
+                if action is not None:
+                    surfaced_action_id = surfaced_action_id or created.id
+                    yield {"type": "agent_action", "action": action}
             elif isinstance(event, KnowledgeEvent):
                 knowledge_refs.extend(event.references)
                 yield {"type": "knowledge", "references": event.references}

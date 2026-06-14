@@ -59,6 +59,7 @@ export default {
     archived: 'Project archived',
     notFound: 'Project not found or access denied',
     workItems: 'Work items',
+    aiChat: 'AI Assistant',
   },
   summary: {
     title: 'Work item overview',
