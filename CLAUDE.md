@@ -333,6 +333,7 @@ Tailwind 4 CSS-first，单一真相源在 `styles/globals.css`：
 | 分页 | 统一 `core/pagination.py` 的 `Page[T]` 泛型 + `page`/`page_size` 查询参数；禁止各模块自定义分页结构 |
 | 枚举 | Python `StrEnum` 定义于 `schemas.py`，DB 存字符串；禁止裸字符串字面量散落 |
 | MCP tool 返回 | 返回 dict（由 schema `.model_dump()` 产生），错误抛 `fastmcp` 标准异常；禁止返回自由格式文本拼接 |
+| MCP tool 鉴权与留痕 | `/mcp` 所有 tool 调用统一经 `modules/skills` 的 `SkillInvocationMiddleware`（双 token：`Authorization: Bearer` server token + `X-WorkNexus-Delegation` delegation；风险门禁：read 执行 / low_write 阻断待 M5 / high_write 拒；每次调用写一行 `skill_invocations`）；tool 内只经 `require_mcp_context()` 取 `(db, actor, delegation)`，禁止 per-tool 自读 header / 自校验 token / 用 tool 参数作身份依据 |
 | REST 响应 schema | 一律继承 `core/schemas.py` 的 `ApiModel`（camelCase 别名 + `from_attributes`），路由返回 `Envelope[Schema]` 类型注解使 OpenAPI/orval 拿到完整类型；禁止手写 alias、禁止业务接口返回裸 dict |
 | 时间 | 一律 UTC aware datetime（`datetime.now(UTC)`），序列化 ISO 8601；前端负责本地化显示 |
 

@@ -30,6 +30,7 @@ class AuditAction(StrEnum):
     WORK_ITEM_COMMENT = "work_item.comment"
     WORK_ITEM_RELATION_ADD = "work_item.relation.add"
     WORK_ITEM_RELATION_REMOVE = "work_item.relation.remove"
+    SKILL_INVOKE = "skill.invoke"
 
 
 async def record(

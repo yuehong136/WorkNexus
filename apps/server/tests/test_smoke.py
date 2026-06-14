@@ -1,5 +1,6 @@
 import pytest
 from fastmcp import Client
+from fastmcp.exceptions import ToolError
 from httpx import ASGITransport, AsyncClient
 
 from worknexus.main import app
@@ -22,5 +23,7 @@ async def test_mcp_ping_in_memory() -> None:
     async with Client(mcp) as client:
         tools = await client.list_tools()
         assert any(t.name == "system_ping" for t in tools)
-        result = await client.call_tool("system_ping", {})
-        assert result.data["status"] == "ok"
+        # In-memory transport carries no HTTP headers, so the M4 dual-token gate
+        # rejects the call before execution (HTTP-level success is in test_mcp_http).
+        with pytest.raises(ToolError):
+            await client.call_tool("system_ping", {})
