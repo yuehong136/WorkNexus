@@ -78,10 +78,11 @@ def test_decide_execution_read_missing_permission_rejected() -> None:
     assert decision.status == SkillInvocationStatus.REJECTED
 
 
-def test_decide_execution_low_write_blocked_in_m4() -> None:
+def test_decide_execution_low_write_deferred_in_m5() -> None:
+    # M5: a permitted low_write tool is deferred into a pending AgentAction, not blocked.
     decision = decide_execution(RiskLevel.LOW_WRITE, Permission.WORK_ITEM_CREATE, _EFFECTIVE)
-    assert decision.action == "blocked"
-    assert decision.status == SkillInvocationStatus.BLOCKED
+    assert decision.action == "defer"
+    assert decision.status == SkillInvocationStatus.SUCCESS
 
 
 def test_decide_execution_low_write_missing_permission_rejected() -> None:

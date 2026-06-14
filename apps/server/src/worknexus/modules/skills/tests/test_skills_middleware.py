@@ -79,20 +79,36 @@ async def test_read_tool_executes_and_logs_success(
     assert inv.represented_user_id == initialized.owner.id
 
 
-async def test_low_write_tool_blocked_and_not_executed(
+async def test_low_write_tool_deferred_to_agent_action(
     monkeypatch: pytest.MonkeyPatch, db: AsyncSession, initialized: SimpleNamespace
 ) -> None:
+    from worknexus.modules.workchat.models import AgentAction
+    from worknexus.modules.workchat.schemas import AgentActionStatus, AgentActionType
+
     token = await _issue_token(db, initialized, project_id=initialized.project.id)
     _patch(monkeypatch, db, {"authorization": f"Bearer {get_settings().mcp_auth_token}", mw.DELEGATION_HEADER: token})
     spy = _Spy()
 
-    with pytest.raises(ToolError):
-        await mw.SkillInvocationMiddleware().on_call_tool(_context("workitem_create_work_item", {"title": "x"}), spy)
+    result = await mw.SkillInvocationMiddleware().on_call_tool(
+        _context("workitem_create_work_item", {"title": "x", "type": "task"}), spy
+    )
 
+    # The tool body never runs; a pending AgentAction is created and a normal result returned.
     assert spy.called is False
+    assert result.structured_content["status"] == "pending_confirmation"
+    assert result.structured_content["requiresConfirmation"] is True
+
+    action = (await db.execute(select(AgentAction))).scalar_one()
+    assert action.status == AgentActionStatus.PENDING
+    assert action.action_type == AgentActionType.CREATE_WORK_ITEM
+    assert action.arguments == {"title": "x", "type": "task"}
+    assert action.requested_by_user_id == initialized.owner.id
+    assert action.project_id == initialized.project.id
+
     inv = (await db.execute(select(SkillInvocation))).scalar_one()
-    assert inv.status == SkillInvocationStatus.BLOCKED
+    assert inv.status == SkillInvocationStatus.SUCCESS
     assert inv.requires_confirmation is True
+    assert inv.agent_action_id == action.id
 
 
 async def test_failing_read_tool_logs_failure(
