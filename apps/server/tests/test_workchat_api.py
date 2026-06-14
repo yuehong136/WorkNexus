@@ -4,6 +4,7 @@ The pending AgentAction is created directly via the service (the AI run that nor
 produces it lands in PR3); here we verify the REST surface end to end.
 """
 
+import json
 from types import SimpleNamespace
 
 import pytest
@@ -82,3 +83,28 @@ async def test_reject_agent_action(owner_client: AsyncClient, db: AsyncSession, 
     assert body["code"] == 0
     assert body["data"]["status"] == "rejected"
     assert body["data"]["rejectionReason"] == "not now"
+
+
+async def test_run_streams_sse(
+    owner_client: AsyncClient, monkeypatch: pytest.MonkeyPatch, initialized: SimpleNamespace
+) -> None:
+    from worknexus.modules.workchat import router as workchat_router
+    from worknexus.modules.workchat.ai_client import DoneEvent, FakeAIClient, TextDelta
+
+    monkeypatch.setattr(workchat_router, "get_ai_client", lambda settings: FakeAIClient([TextDelta("hi"), DoneEvent()]))
+    project_id = initialized.project.id
+    conversation_id = (await owner_client.get(f"/api/v1/projects/{project_id}/conversations")).json()["data"][0]["id"]
+
+    collected = []
+    async with owner_client.stream(
+        "POST", "/api/v1/workchat/runs", json={"conversationId": conversation_id, "content": "hi"}
+    ) as resp:
+        assert resp.status_code == 200
+        assert resp.headers["content-type"].startswith("text/event-stream")
+        async for line in resp.aiter_lines():
+            if line.startswith("data:"):
+                collected.append(json.loads(line[len("data:") :].strip()))
+
+    types = [event["type"] for event in collected]
+    assert "message_delta" in types
+    assert types[-1] == "done"
