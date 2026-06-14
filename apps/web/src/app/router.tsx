@@ -75,6 +75,13 @@ export const router = createBrowserRouter([
             },
           },
           {
+            path: paths.skills(),
+            lazy: async () => {
+              const { SkillsPage } = await import('@/features/skills/routes/skills-page')
+              return { Component: SkillsPage }
+            },
+          },
+          {
             path: paths.settingsMembers(),
             lazy: async () => {
               const { MembersPage } = await import('@/features/settings/routes/members-page')
