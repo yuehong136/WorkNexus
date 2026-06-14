@@ -1590,6 +1590,173 @@
           }
         }
       }
+    },
+    "/api/v1/skills": {
+      "get": {
+        "tags": [
+          "skills"
+        ],
+        "summary": "List Skills",
+        "operationId": "list_skills",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Envelope_list_SkillOut__"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/skills/invocations": {
+      "get": {
+        "tags": [
+          "skills"
+        ],
+        "summary": "List Skill Invocations",
+        "operationId": "list_skill_invocations",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/SkillInvocationStatus"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "name": "risk_level",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/RiskLevel"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Risk Level"
+            }
+          },
+          {
+            "name": "tool_name",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Tool Name"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 20,
+              "title": "Page Size"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Envelope_Page_SkillInvocationOut__"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/skills/invocations/{invocation_id}": {
+      "get": {
+        "tags": [
+          "skills"
+        ],
+        "summary": "Get Skill Invocation",
+        "operationId": "get_skill_invocation",
+        "parameters": [
+          {
+            "name": "invocation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Invocation Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Envelope_SkillInvocationOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -2093,6 +2260,32 @@
         "type": "object",
         "title": "Envelope[Page[ProjectOut]]"
       },
+      "Envelope_Page_SkillInvocationOut__": {
+        "properties": {
+          "code": {
+            "type": "integer",
+            "title": "Code",
+            "default": 0
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "default": "ok"
+          },
+          "data": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Page_SkillInvocationOut_"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "title": "Envelope[Page[SkillInvocationOut]]"
+      },
       "Envelope_Page_UserListOut__": {
         "properties": {
           "code": {
@@ -2275,6 +2468,32 @@
         "type": "object",
         "title": "Envelope[SetupStatusOut]"
       },
+      "Envelope_SkillInvocationOut_": {
+        "properties": {
+          "code": {
+            "type": "integer",
+            "title": "Code",
+            "default": 0
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "default": "ok"
+          },
+          "data": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SkillInvocationOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "title": "Envelope[SkillInvocationOut]"
+      },
       "Envelope_WorkItemOut_": {
         "properties": {
           "code": {
@@ -2420,6 +2639,36 @@
         },
         "type": "object",
         "title": "Envelope[list[RelationOut]]"
+      },
+      "Envelope_list_SkillOut__": {
+        "properties": {
+          "code": {
+            "type": "integer",
+            "title": "Code",
+            "default": 0
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "default": "ok"
+          },
+          "data": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/SkillOut"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Data"
+          }
+        },
+        "type": "object",
+        "title": "Envelope[list[SkillOut]]"
       },
       "HTTPValidationError": {
         "properties": {
@@ -2726,6 +2975,37 @@
           "pageSize"
         ],
         "title": "Page[ProjectOut]"
+      },
+      "Page_SkillInvocationOut_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/SkillInvocationOut"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "page": {
+            "type": "integer",
+            "title": "Page"
+          },
+          "pageSize": {
+            "type": "integer",
+            "title": "Pagesize"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total",
+          "page",
+          "pageSize"
+        ],
+        "title": "Page[SkillInvocationOut]"
       },
       "Page_UserListOut_": {
         "properties": {
@@ -3252,6 +3532,34 @@
         ],
         "title": "RelationType"
       },
+      "RepresentedUserOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "displayName": {
+            "type": "string",
+            "title": "Displayname"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "displayName"
+        ],
+        "title": "RepresentedUserOut"
+      },
+      "RiskLevel": {
+        "type": "string",
+        "enum": [
+          "read",
+          "low_write",
+          "high_write"
+        ],
+        "title": "RiskLevel",
+        "description": "AI action risk (D4). Shared semantics with MCP tags / AgentAction (M5)."
+      },
       "Role": {
         "type": "string",
         "enum": [
@@ -3305,6 +3613,258 @@
           "initialized"
         ],
         "title": "SetupStatusOut"
+      },
+      "SkillInvocationOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "skillCode": {
+            "type": "string",
+            "title": "Skillcode"
+          },
+          "toolName": {
+            "type": "string",
+            "title": "Toolname"
+          },
+          "callerType": {
+            "type": "string",
+            "title": "Callertype"
+          },
+          "callerId": {
+            "type": "string",
+            "title": "Callerid"
+          },
+          "representedUserId": {
+            "type": "string",
+            "title": "Representeduserid"
+          },
+          "representedUser": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RepresentedUserOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "agentId": {
+            "type": "string",
+            "title": "Agentid"
+          },
+          "projectId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Projectid"
+          },
+          "conversationId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Conversationid"
+          },
+          "runId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Runid"
+          },
+          "inputSummary": {
+            "type": "string",
+            "title": "Inputsummary"
+          },
+          "outputSummary": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Outputsummary"
+          },
+          "status": {
+            "$ref": "#/components/schemas/SkillInvocationStatus"
+          },
+          "riskLevel": {
+            "$ref": "#/components/schemas/RiskLevel"
+          },
+          "requiresConfirmation": {
+            "type": "boolean",
+            "title": "Requiresconfirmation"
+          },
+          "agentActionId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Agentactionid"
+          },
+          "auditLogId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Auditlogid"
+          },
+          "errorMessage": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Errormessage"
+          },
+          "startedAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Startedat"
+          },
+          "finishedAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finishedat"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Createdat"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "skillCode",
+          "toolName",
+          "callerType",
+          "callerId",
+          "representedUserId",
+          "agentId",
+          "projectId",
+          "conversationId",
+          "runId",
+          "inputSummary",
+          "outputSummary",
+          "status",
+          "riskLevel",
+          "requiresConfirmation",
+          "agentActionId",
+          "auditLogId",
+          "errorMessage",
+          "startedAt",
+          "finishedAt",
+          "createdAt"
+        ],
+        "title": "SkillInvocationOut"
+      },
+      "SkillInvocationStatus": {
+        "type": "string",
+        "enum": [
+          "running",
+          "success",
+          "failed",
+          "blocked",
+          "rejected"
+        ],
+        "title": "SkillInvocationStatus"
+      },
+      "SkillOut": {
+        "properties": {
+          "skillCode": {
+            "type": "string",
+            "title": "Skillcode"
+          },
+          "tools": {
+            "items": {
+              "$ref": "#/components/schemas/SkillToolOut"
+            },
+            "type": "array",
+            "title": "Tools"
+          }
+        },
+        "type": "object",
+        "required": [
+          "skillCode",
+          "tools"
+        ],
+        "title": "SkillOut"
+      },
+      "SkillToolOut": {
+        "properties": {
+          "toolName": {
+            "type": "string",
+            "title": "Toolname"
+          },
+          "riskLevel": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RiskLevel"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "executableInV01": {
+            "type": "boolean",
+            "title": "Executableinv01"
+          },
+          "requiredPermission": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Permission"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "toolName",
+          "riskLevel",
+          "executableInV01",
+          "requiredPermission"
+        ],
+        "title": "SkillToolOut"
       },
       "TenantOut": {
         "properties": {
