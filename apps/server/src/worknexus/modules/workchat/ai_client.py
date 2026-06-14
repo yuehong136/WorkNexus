@@ -60,11 +60,24 @@ class ErrorEvent:
 
 
 @dataclass(frozen=True)
+class ProposeAction:
+    """Fake-only: asks the orchestration to create a pending AgentAction directly.
+
+    The real MultiragAgentCompletionsClient never emits this — in production a proposal is
+    the AI calling a low_write MCP tool, gated and created by the skills middleware, and
+    surfaced here as a ToolResultEvent. This exists so the FakeAIClient can drive the full
+    confirmation chain in tests/E2E without a live multirag + /mcp round trip."""
+
+    tool_name: str
+    arguments: dict[str, Any] = field(default_factory=dict)
+
+
+@dataclass(frozen=True)
 class DoneEvent:
     pass
 
 
-AIEvent = TextDelta | ToolCall | ToolResultEvent | KnowledgeEvent | ErrorEvent | DoneEvent
+AIEvent = TextDelta | ToolCall | ToolResultEvent | KnowledgeEvent | ErrorEvent | ProposeAction | DoneEvent
 
 
 # --- pure parser (unit-tested with fixtures) -------------------------------------
@@ -178,7 +191,14 @@ class FakeAIClient:
 
 
 def _default_script() -> list[AIEvent]:
-    return [TextDelta(content="Sure, I can help with that."), DoneEvent()]
+    # Drives the full chain for E2E/offline: a reply + a proposed work item to confirm.
+    return [
+        TextDelta(content="Sure — I'll draft a work item for that."),
+        ProposeAction(
+            tool_name="workitem_create_work_item", arguments={"title": "Follow up from WorkChat", "type": "task"}
+        ),
+        DoneEvent(),
+    ]
 
 
 # --- real multirag client (live-verify endpoint/body before relying on this) -----

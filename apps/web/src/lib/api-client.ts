@@ -12,7 +12,10 @@ interface Envelope<T> {
 
 // API host follows the page host so LAN access works without configuration;
 // VITE_API_BASE_URL still overrides (e.g. Playwright).
-const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? `http://${window.location.hostname}:8200/api/v1`
+// Exported so lib/sse.ts (the one sanctioned non-contracts fetch) hits the same origin.
+export const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL ?? `http://${window.location.hostname}:8200/api/v1`
+const BASE_URL = API_BASE_URL
 
 export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`${BASE_URL}${path}`, {

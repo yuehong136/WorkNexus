@@ -115,6 +115,31 @@ async def test_start_run_surfaces_pending_agent_action(db: AsyncSession, initial
     assert ai_message.agent_action_id == action.id
 
 
+async def test_start_run_propose_action_creates_and_surfaces(
+    db: AsyncSession, initialized: SimpleNamespace
+) -> None:
+    _, subject, conversation = await _setup(db, initialized)
+    # The default fake script emits a ProposeAction (the E2E/offline affordance).
+    client = FakeAIClient()
+    events = [
+        e
+        async for e in runs.start_run(
+            db,
+            subject,
+            conversation=conversation,
+            content="make a task",
+            work_item_ids=None,
+            ai_client=client,
+            agent_id=initialized.agent.id,
+            run_id="run_propose",
+        )
+    ]
+    agent_events = [e for e in events if e["type"] == "agent_action"]
+    assert len(agent_events) == 1
+    assert agent_events[0]["action"]["actionType"] == "create_work_item"
+    assert agent_events[0]["action"]["status"] == "pending"
+
+
 async def test_start_run_emits_error_event(db: AsyncSession, initialized: SimpleNamespace) -> None:
     _, subject, conversation = await _setup(db, initialized)
     client = FakeAIClient([ErrorEvent(message="model exploded", code=42), DoneEvent()])

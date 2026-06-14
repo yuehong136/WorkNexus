@@ -323,6 +323,8 @@ Tailwind 4 CSS-first，单一真相源在 `styles/globals.css`：
 | 契约响应解包 | orval 生成的 client 函数返回 `{ data: Envelope, status }`，一律经 `lib/api-client.ts` 的 `unwrap()` 取 payload；禁止手写 `.data.data` 链 |
 | AI / Markdown 内容渲染 | 一律经 `lib/markdown.tsx` 的 `Markdown` 组件（react-markdown 渲染 + DOMPurify 先 sanitize 源串、不启用 rehype-raw）；**禁止 `dangerouslySetInnerHTML` 直插**（§7.7 模型输出按不可信输入处理） |
 | 看板拖拽 | @dnd-kit（`DndContext` + `useDraggable`/`useDroppable`）；放置到新状态列即调 transition mutation 落库，非法流转由后端 2002 拒绝并 toast；禁止手写 HTML5 `draggable` 事件 |
+| AI / 流式 SSE | 唯一封装 `lib/sse.ts` 的 `streamSSE(path, body, { signal, onEvent })`（fetch + ReadableStream + `credentials:'include'`，按 `data:` 分帧 `JSON.parse`，畸形帧跳过不抛）；feature 侧用 `use<Feature>Run` hook 包装（累积流式增量、终态按 Key Factory invalidate）；事件为后端定义的干净 schema（如 `message_delta` / `agent_action` / `done`）；**禁止 `EventSource`**（需 POST + cookie）、禁止页面内裸 fetch 流 |
+| AI 动作确认卡片 | 统一 `AgentActionCard`（动作类型 i18n + 参数/diff + 状态 Badge）；卡片本身即确认面：pending 显示 批准/拒绝 直接调 mutation，**不再套 `ConfirmDialog`**；approve/reject 成功按 Key Factory invalidate agentActions；失败（权限/过期等）由 `lib/query-client.ts` 全局 onError toast |
 
 ### 5.6 后端统一写法手册
 

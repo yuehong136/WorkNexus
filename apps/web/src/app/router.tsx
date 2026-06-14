@@ -75,6 +75,13 @@ export const router = createBrowserRouter([
             },
           },
           {
+            path: paths.ai(':projectId'),
+            lazy: async () => {
+              const { AIPage } = await import('@/features/workchat/routes/ai-page')
+              return { Component: AIPage }
+            },
+          },
+          {
             path: paths.skills(),
             lazy: async () => {
               const { SkillsPage } = await import('@/features/skills/routes/skills-page')

@@ -214,7 +214,7 @@ async def create_pending_agent_action(
     *,
     tool_name: str,
     arguments: dict[str, Any],
-    skill_invocation_id: str,
+    skill_invocation_id: str | None,
 ) -> AgentAction:
     """Called by the skills middleware on a permitted low_write tool call. Writes the
     pending row + audit on the caller's session; the middleware owns the commit."""

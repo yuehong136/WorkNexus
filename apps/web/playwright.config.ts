@@ -25,6 +25,8 @@ export default defineConfig({
       env: {
         WORKNEXUS_DATABASE_URL: E2E_DATABASE_URL,
         WORKNEXUS_CORS_ORIGINS: `["http://localhost:${WEB_PORT}"]`,
+        // No live multirag in CI: the workchat run uses the deterministic FakeAIClient.
+        WORKNEXUS_AI_CLIENT: 'fake',
       },
       reuseExistingServer: false,
       timeout: 30_000,
