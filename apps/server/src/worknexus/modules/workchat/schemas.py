@@ -29,16 +29,16 @@ class MessageRole(StrEnum):
 
 
 class AgentActionType(StrEnum):
-    """v0.1 confirmable write actions (the four work_items low_write tools).
-
-    intake actions (create_intake_request / accept_intake_request) land in M6 when
-    intake MCP tools exist; read tools (search / summary) execute directly, never
-    becoming an AgentAction."""
+    """v0.1 confirmable write actions: the four work_items low_write tools plus the two
+    intake low_write tools (M6). Read tools (search / summary / list) execute directly and
+    never become an AgentAction."""
 
     CREATE_WORK_ITEM = "create_work_item"
     UPDATE_WORK_ITEM = "update_work_item"
     TRANSITION_WORK_ITEM = "transition_work_item"
     COMMENT_WORK_ITEM = "comment_work_item"
+    CREATE_INTAKE_REQUEST = "create_intake_request"
+    ACCEPT_INTAKE_REQUEST = "accept_intake_request"
 
 
 class AgentActionStatus(StrEnum):

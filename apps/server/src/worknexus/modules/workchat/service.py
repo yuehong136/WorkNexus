@@ -29,6 +29,8 @@ from worknexus.core.pagination import PageParams
 from worknexus.modules.audit import service as audit
 from worknexus.modules.audit.service import AuditAction
 from worknexus.modules.identity.schemas import DelegationContext
+from worknexus.modules.intake import service as intake_service
+from worknexus.modules.intake.schemas import IntakeAcceptIn, IntakeCreateIn, IntakeSource
 from worknexus.modules.projects import service as projects_service
 from worknexus.modules.work_items import service as work_items_service
 from worknexus.modules.work_items.schemas import (
@@ -60,6 +62,8 @@ _TOOL_TO_ACTION: dict[str, AgentActionType] = {
     "workitem_update_work_item": AgentActionType.UPDATE_WORK_ITEM,
     "workitem_transition_work_item": AgentActionType.TRANSITION_WORK_ITEM,
     "workitem_comment_work_item": AgentActionType.COMMENT_WORK_ITEM,
+    "intake_create_intake_request": AgentActionType.CREATE_INTAKE_REQUEST,
+    "intake_accept_intake_request": AgentActionType.ACCEPT_INTAKE_REQUEST,
 }
 
 _ACTION_PERMISSION: dict[AgentActionType, Permission] = {
@@ -67,7 +71,11 @@ _ACTION_PERMISSION: dict[AgentActionType, Permission] = {
     AgentActionType.UPDATE_WORK_ITEM: Permission.WORK_ITEM_UPDATE,
     AgentActionType.TRANSITION_WORK_ITEM: Permission.WORK_ITEM_TRANSITION,
     AgentActionType.COMMENT_WORK_ITEM: Permission.WORK_ITEM_COMMENT,
+    AgentActionType.CREATE_INTAKE_REQUEST: Permission.INTAKE_CREATE,
+    AgentActionType.ACCEPT_INTAKE_REQUEST: Permission.INTAKE_TRIAGE,
 }
+
+_INTAKE_ACTIONS = frozenset({AgentActionType.CREATE_INTAKE_REQUEST, AgentActionType.ACCEPT_INTAKE_REQUEST})
 
 
 def _now() -> datetime:
@@ -333,6 +341,48 @@ async def _check_live_permissions(db: AsyncSession, user: Actor, action: AgentAc
 
 
 async def _dispatch(db: AsyncSession, action: AgentAction) -> tuple[str, str]:
+    """Route a confirmed action to its domain handler, executed as the AI-agent actor.
+    workchat depends on the domain services (work_items, intake); they never depend back."""
+    if AgentActionType(action.action_type) in _INTAKE_ACTIONS:
+        return await _dispatch_intake_action(db, action)
+    return await _dispatch_work_item_action(db, action)
+
+
+async def _dispatch_intake_action(db: AsyncSession, action: AgentAction) -> tuple[str, str]:
+    """create → log an ai_chat-sourced intake request; accept → convert it to a work item.
+    Identity/scope come from the action row, never the tool arguments: project from
+    `project_id`, requester from `requested_by_user_id`, source set internally."""
+    actor = _agent_actor(action)
+    args = dict(action.arguments or {})
+    action_type = AgentActionType(action.action_type)
+    if action_type == AgentActionType.CREATE_INTAKE_REQUEST:
+        data = IntakeCreateIn(title=args["title"], description=args.get("description"))
+        intake = await intake_service.create_intake_request(
+            db,
+            actor,
+            action.project_id,
+            data,
+            source=IntakeSource.AI_CHAT,
+            source_ref_id=action.id,
+            submitter_id=action.requested_by_user_id,
+        )
+        return "intake_request", intake.id
+    # ACCEPT_INTAKE_REQUEST
+    accept = IntakeAcceptIn(
+        type=WorkItemType(args["type"]) if args.get("type") else None,
+        title=args.get("title"),
+        priority=WorkItemPriority(args["priority"]) if args.get("priority") else None,
+        assignee_id=args.get("assignee_id"),
+    )
+    result = await intake_service.accept_intake_request(
+        db, actor, args["intake_request_id"], accept, reporter_id=action.requested_by_user_id
+    )
+    if result.converted_work_item_id is None:  # pragma: no cover - accept always converts
+        raise BizError(ErrorCode.INTERNAL, "intake accept did not produce a work item")
+    return "work_item", result.converted_work_item_id
+
+
+async def _dispatch_work_item_action(db: AsyncSession, action: AgentAction) -> tuple[str, str]:
     """Map the proposed tool call to the matching work_items.service write, executed as
     the AI-agent actor. reporter_id must be the requesting user (created_by accepts the
     agent id, but reporter_id is a users FK)."""
