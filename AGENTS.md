@@ -317,6 +317,7 @@ Tailwind 4 CSS-first，单一真相源在 `styles/globals.css`：
 | 路由跳转 | 路径常量集中 `lib/paths.ts`（函数式：`paths.workItem(projectId, id)`）；禁止硬编码路径字符串 |
 | zustand 取值 | 一律 selector：`useUIStore(s => s.theme)`；禁止解构整个 store 导致全量重渲染；store 定义含 `persist` + `partialize`（只持久化必要字段） |
 | 图表颜色 | 从 CSS 变量读语义 token（`getComputedStyle`），禁止硬编码十六进制色值 |
+| 图表（柱/环/折线）封装 | recharts 一律经 `components/patterns/charts/` 的 `BarChart`/`DonutChart`/`LineChart` 薄封装（纯展示层，禁访问 store/API）；系列色由 feature 层经 `lib/chart-colors.ts` 的 `useChartColors()` 从语义 token（`--chart-1..8` 分类色板 / `--status-*` / `--brand-primary`）`getComputedStyle` 解析后**作为 props 传入**封装；axis/grid/tooltip 用 `var(--…)` CSS 变量引用；禁组件内硬编码十六进制、禁在 patterns 图表内读 token/store（取色与主题订阅在 feature/lib 层完成） |
 | 全局快捷键/命令 | cmdk 命令面板统一注册，禁止散落 `keydown` 监听 |
 | 当前用户上下文/权限控制 | 统一消费 `lib/auth` 的 `useMeQuery`；UI 权限判断只用 `useHasPermission` / `PermissionGate`（`lib/auth`），禁止自行读 cookie、缓存权限或解析角色 |
 | 路由守卫 | `features/auth` 的 `RequireAuth`（受保护区）与 `GuestOnly`（login/setup）布局路由；禁止在页面组件内写跳转守卫逻辑 |

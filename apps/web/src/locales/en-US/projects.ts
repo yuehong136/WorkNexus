@@ -60,6 +60,7 @@ export default {
     notFound: 'Project not found or access denied',
     workItems: 'Work items',
     intake: 'Intake',
+    dashboard: 'Dashboard',
     aiChat: 'AI Assistant',
   },
   summary: {

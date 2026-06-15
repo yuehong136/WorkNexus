@@ -23,6 +23,17 @@
   --status-warning: oklch(75% 0.17 75);
   --status-error: oklch(60% 0.21 25);
   --status-info: oklch(62% 0.16 240);
+
+  /* Categorical chart palette (M7). Charts read these via getComputedStyle — never
+     hardcode hex in chart components (AGENTS §5.2). */
+  --chart-1: oklch(55% 0.2 262);
+  --chart-2: oklch(63% 0.17 150);
+  --chart-3: oklch(75% 0.17 75);
+  --chart-4: oklch(60% 0.21 25);
+  --chart-5: oklch(62% 0.16 300);
+  --chart-6: oklch(65% 0.15 195);
+  --chart-7: oklch(68% 0.16 50);
+  --chart-8: oklch(60% 0.13 330);
 }
 
 [data-theme='dark'] {
@@ -47,6 +58,15 @@
   --status-warning: oklch(80% 0.15 75);
   --status-error: oklch(68% 0.19 25);
   --status-info: oklch(70% 0.14 240);
+
+  --chart-1: oklch(65% 0.18 262);
+  --chart-2: oklch(70% 0.16 150);
+  --chart-3: oklch(80% 0.15 75);
+  --chart-4: oklch(68% 0.19 25);
+  --chart-5: oklch(70% 0.15 300);
+  --chart-6: oklch(72% 0.13 195);
+  --chart-7: oklch(74% 0.15 50);
+  --chart-8: oklch(70% 0.12 330);
 }
 
 @theme inline {
@@ -71,6 +91,15 @@
   --color-status-warning: var(--status-warning);
   --color-status-error: var(--status-error);
   --color-status-info: var(--status-info);
+
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-chart-6: var(--chart-6);
+  --color-chart-7: var(--chart-7);
+  --color-chart-8: var(--chart-8);
 }
 
 body {
