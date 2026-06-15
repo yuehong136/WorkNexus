@@ -2038,6 +2038,197 @@
         }
       }
     },
+    "/api/v1/projects/{project_id}/dashboard/summary": {
+      "get": {
+        "tags": [
+          "dashboard"
+        ],
+        "summary": "Get Dashboard Summary",
+        "operationId": "get_dashboard_summary",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Project Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Envelope_DashboardSummaryOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/projects/{project_id}/dashboard/workload": {
+      "get": {
+        "tags": [
+          "dashboard"
+        ],
+        "summary": "Get Dashboard Workload",
+        "operationId": "get_dashboard_workload",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Project Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Envelope_DashboardWorkloadOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/projects/{project_id}/dashboard/overdue": {
+      "get": {
+        "tags": [
+          "dashboard"
+        ],
+        "summary": "Get Dashboard Overdue",
+        "operationId": "get_dashboard_overdue",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 20,
+              "title": "Page Size"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Envelope_Page_DashboardOverdueItemOut__"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/projects/{project_id}/dashboard/ai-insights": {
+      "get": {
+        "tags": [
+          "dashboard"
+        ],
+        "summary": "Get Dashboard Ai Insights",
+        "operationId": "get_dashboard_ai_insights",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Project Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Envelope_DashboardInsightsOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/skills": {
       "get": {
         "tags": [
@@ -3274,6 +3465,220 @@
         ],
         "title": "CurrentUserContext"
       },
+      "DashboardInsightsOut": {
+        "properties": {
+          "insights": {
+            "items": {
+              "$ref": "#/components/schemas/InsightOut"
+            },
+            "type": "array",
+            "title": "Insights"
+          },
+          "provenance": {
+            "$ref": "#/components/schemas/InsightProvenance"
+          }
+        },
+        "type": "object",
+        "required": [
+          "insights",
+          "provenance"
+        ],
+        "title": "DashboardInsightsOut"
+      },
+      "DashboardOverdueItemOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "status": {
+            "$ref": "#/components/schemas/WorkItemStatus"
+          },
+          "type": {
+            "$ref": "#/components/schemas/WorkItemType"
+          },
+          "priority": {
+            "$ref": "#/components/schemas/WorkItemPriority"
+          },
+          "assigneeId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assigneeid"
+          },
+          "assignee": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/UserBriefOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "dueAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Dueat"
+          },
+          "daysOverdue": {
+            "type": "integer",
+            "title": "Daysoverdue"
+          },
+          "source": {
+            "$ref": "#/components/schemas/WorkItemSource"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Createdat"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "key",
+          "title",
+          "status",
+          "type",
+          "priority",
+          "assigneeId",
+          "assignee",
+          "dueAt",
+          "daysOverdue",
+          "source",
+          "createdAt"
+        ],
+        "title": "DashboardOverdueItemOut"
+      },
+      "DashboardSummaryOut": {
+        "properties": {
+          "totalCount": {
+            "type": "integer",
+            "title": "Totalcount"
+          },
+          "statusCounts": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Statuscounts"
+          },
+          "typeCounts": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Typecounts"
+          },
+          "priorityCounts": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Prioritycounts"
+          },
+          "sourceCounts": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Sourcecounts"
+          },
+          "highPriorityCount": {
+            "type": "integer",
+            "title": "Highprioritycount"
+          },
+          "overdueCount": {
+            "type": "integer",
+            "title": "Overduecount"
+          },
+          "aiCreatedCount": {
+            "type": "integer",
+            "title": "Aicreatedcount"
+          },
+          "intakeRequestCount": {
+            "type": "integer",
+            "title": "Intakerequestcount"
+          },
+          "intakeStatusCounts": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Intakestatuscounts"
+          },
+          "intakeConvertedCount": {
+            "type": "integer",
+            "title": "Intakeconvertedcount"
+          },
+          "intakeConversionRate": {
+            "type": "number",
+            "title": "Intakeconversionrate"
+          },
+          "createdTrend": {
+            "items": {
+              "$ref": "#/components/schemas/TrendPoint"
+            },
+            "type": "array",
+            "title": "Createdtrend"
+          },
+          "completedTrend": {
+            "items": {
+              "$ref": "#/components/schemas/TrendPoint"
+            },
+            "type": "array",
+            "title": "Completedtrend"
+          }
+        },
+        "type": "object",
+        "required": [
+          "totalCount",
+          "statusCounts",
+          "typeCounts",
+          "priorityCounts",
+          "sourceCounts",
+          "highPriorityCount",
+          "overdueCount",
+          "aiCreatedCount",
+          "intakeRequestCount",
+          "intakeStatusCounts",
+          "intakeConvertedCount",
+          "intakeConversionRate",
+          "createdTrend",
+          "completedTrend"
+        ],
+        "title": "DashboardSummaryOut"
+      },
+      "DashboardWorkloadOut": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/WorkloadItemOut"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "title": "DashboardWorkloadOut"
+      },
       "Envelope_AgentActionOut_": {
         "properties": {
           "code": {
@@ -3351,6 +3756,84 @@
         },
         "type": "object",
         "title": "Envelope[CurrentUserContext]"
+      },
+      "Envelope_DashboardInsightsOut_": {
+        "properties": {
+          "code": {
+            "type": "integer",
+            "title": "Code",
+            "default": 0
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "default": "ok"
+          },
+          "data": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DashboardInsightsOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "title": "Envelope[DashboardInsightsOut]"
+      },
+      "Envelope_DashboardSummaryOut_": {
+        "properties": {
+          "code": {
+            "type": "integer",
+            "title": "Code",
+            "default": 0
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "default": "ok"
+          },
+          "data": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DashboardSummaryOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "title": "Envelope[DashboardSummaryOut]"
+      },
+      "Envelope_DashboardWorkloadOut_": {
+        "properties": {
+          "code": {
+            "type": "integer",
+            "title": "Code",
+            "default": 0
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "default": "ok"
+          },
+          "data": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DashboardWorkloadOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "title": "Envelope[DashboardWorkloadOut]"
       },
       "Envelope_IntakeOut_": {
         "properties": {
@@ -3527,6 +4010,32 @@
         },
         "type": "object",
         "title": "Envelope[Page[AgentActionOut]]"
+      },
+      "Envelope_Page_DashboardOverdueItemOut__": {
+        "properties": {
+          "code": {
+            "type": "integer",
+            "title": "Code",
+            "default": 0
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "default": "ok"
+          },
+          "data": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Page_DashboardOverdueItemOut_"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "title": "Envelope[Page[DashboardOverdueItemOut]]"
       },
       "Envelope_Page_IntakeOut__": {
         "properties": {
@@ -4123,6 +4632,82 @@
           "oidc"
         ],
         "title": "IdentityProvider"
+      },
+      "InsightKind": {
+        "type": "string",
+        "enum": [
+          "risk",
+          "overdue",
+          "high_priority",
+          "workload"
+        ],
+        "title": "InsightKind"
+      },
+      "InsightOut": {
+        "properties": {
+          "kind": {
+            "$ref": "#/components/schemas/InsightKind"
+          },
+          "severity": {
+            "$ref": "#/components/schemas/InsightSeverity"
+          },
+          "metrics": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Metrics"
+          },
+          "detail": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "required": [
+          "kind",
+          "severity",
+          "metrics"
+        ],
+        "title": "InsightOut"
+      },
+      "InsightProvenance": {
+        "properties": {
+          "provider": {
+            "type": "string",
+            "title": "Provider"
+          },
+          "version": {
+            "type": "string",
+            "title": "Version"
+          },
+          "generatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Generatedat"
+          }
+        },
+        "type": "object",
+        "required": [
+          "provider",
+          "version",
+          "generatedAt"
+        ],
+        "title": "InsightProvenance"
+      },
+      "InsightSeverity": {
+        "type": "string",
+        "enum": [
+          "info",
+          "warning",
+          "critical"
+        ],
+        "title": "InsightSeverity"
       },
       "IntakeAcceptIn": {
         "properties": {
@@ -4914,6 +5499,37 @@
           "pageSize"
         ],
         "title": "Page[AgentActionOut]"
+      },
+      "Page_DashboardOverdueItemOut_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/DashboardOverdueItemOut"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "page": {
+            "type": "integer",
+            "title": "Page"
+          },
+          "pageSize": {
+            "type": "integer",
+            "title": "Pagesize"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total",
+          "page",
+          "pageSize"
+        ],
+        "title": "Page[DashboardOverdueItemOut]"
       },
       "Page_IntakeOut_": {
         "properties": {
@@ -5985,6 +6601,24 @@
         ],
         "title": "TenantOut"
       },
+      "TrendPoint": {
+        "properties": {
+          "date": {
+            "type": "string",
+            "title": "Date"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "date",
+          "count"
+        ],
+        "title": "TrendPoint"
+      },
       "UserBriefOut": {
         "properties": {
           "id": {
@@ -6679,6 +7313,60 @@
         },
         "type": "object",
         "title": "WorkItemUpdateIn"
+      },
+      "WorkloadItemOut": {
+        "properties": {
+          "assigneeId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assigneeid"
+          },
+          "assignee": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/UserBriefOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "totalCount": {
+            "type": "integer",
+            "title": "Totalcount"
+          },
+          "statusCounts": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Statuscounts"
+          },
+          "overdueCount": {
+            "type": "integer",
+            "title": "Overduecount"
+          },
+          "highPriorityCount": {
+            "type": "integer",
+            "title": "Highprioritycount"
+          }
+        },
+        "type": "object",
+        "required": [
+          "assigneeId",
+          "assignee",
+          "totalCount",
+          "statusCounts",
+          "overdueCount",
+          "highPriorityCount"
+        ],
+        "title": "WorkloadItemOut"
       }
     }
   }
