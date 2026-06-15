@@ -26,6 +26,8 @@ export default {
     update_work_item: '更新工作项',
     transition_work_item: '流转工作项',
     comment_work_item: '评论工作项',
+    create_intake_request: '创建请求',
+    accept_intake_request: '接受请求并转化',
   },
   actions: {
     approve: '批准',

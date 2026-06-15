@@ -1,4 +1,4 @@
-import { Bot, ListChecks, Pencil } from 'lucide-react'
+import { Bot, Inbox, ListChecks, Pencil } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useParams } from 'react-router'
@@ -41,6 +41,7 @@ export function ProjectDetailPage() {
   const canArchive = useHasPermission('project.archive', projectId)
   const canManageMembers = useHasPermission('project.member.manage', projectId)
   const canUseAI = useHasPermission('workchat.use', projectId)
+  const canSeeIntake = useHasPermission('intake.read', projectId)
 
   if (projectQuery.isPending) return <PageSkeleton />
   if (projectQuery.isError) return <ErrorState title={t('projects:detail.notFound')} />
@@ -73,6 +74,12 @@ export function ProjectDetailPage() {
             <ListChecks className="size-4" />
             {t('projects:detail.workItems')}
           </Button>
+          {canSeeIntake ? (
+            <Button variant="outline" size="sm" onClick={() => void navigate(paths.intake(project.id))}>
+              <Inbox className="size-4" />
+              {t('projects:detail.intake')}
+            </Button>
+          ) : null}
           {canUseAI ? (
             <Button variant="outline" size="sm" onClick={() => void navigate(paths.ai(project.id))}>
               <Bot className="size-4" />
