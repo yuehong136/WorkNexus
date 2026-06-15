@@ -25,6 +25,9 @@ import type {
   EnvelopeAgentActionOut,
   EnvelopeCommentOut,
   EnvelopeCurrentUserContext,
+  EnvelopeDashboardInsightsOut,
+  EnvelopeDashboardSummaryOut,
+  EnvelopeDashboardWorkloadOut,
   EnvelopeIntakeOut,
   EnvelopeInviteCreatedOut,
   EnvelopeInviteOut,
@@ -39,6 +42,7 @@ import type {
   EnvelopeMessageOut,
   EnvelopeNoneType,
   EnvelopePageAgentActionOut,
+  EnvelopePageDashboardOverdueItemOut,
   EnvelopePageIntakeOut,
   EnvelopePageInviteOut,
   EnvelopePageMessageOut,
@@ -53,6 +57,7 @@ import type {
   EnvelopeSetupStatusOut,
   EnvelopeSkillInvocationOut,
   EnvelopeWorkItemOut,
+  GetDashboardOverdueParams,
   GetHealth200,
   HTTPValidationError,
   IntakeAcceptIn,
@@ -4011,6 +4016,398 @@ export const useSnoozeIntake = <TError = HTTPValidationError,
       return useMutation(mutationOptions);
     }
     
+/**
+ * @summary Get Dashboard Summary
+ */
+export type getDashboardSummaryResponse200 = {
+  data: EnvelopeDashboardSummaryOut
+  status: 200
+}
+
+export type getDashboardSummaryResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+    
+export type getDashboardSummaryResponseSuccess = (getDashboardSummaryResponse200) & {
+  headers: Headers;
+};
+export type getDashboardSummaryResponseError = (getDashboardSummaryResponse422) & {
+  headers: Headers;
+};
+
+export type getDashboardSummaryResponse = (getDashboardSummaryResponseSuccess | getDashboardSummaryResponseError)
+
+export const getGetDashboardSummaryUrl = (projectId: string,) => {
+
+
+  
+
+  return `/api/v1/projects/${projectId}/dashboard/summary`
+}
+
+export const getDashboardSummary = async (projectId: string, options?: RequestInit): Promise<getDashboardSummaryResponse> => {
+  
+  return apiMutator<getDashboardSummaryResponse>(getGetDashboardSummaryUrl(projectId),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+
+
+export const getGetDashboardSummaryQueryKey = (projectId?: string,) => {
+    return [
+    `/api/v1/projects/${projectId}/dashboard/summary`
+    ] as const;
+    }
+
+    
+export const getGetDashboardSummaryQueryOptions = <TData = Awaited<ReturnType<typeof getDashboardSummary>>, TError = HTTPValidationError>(projectId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getDashboardSummary>>, TError, TData>, request?: SecondParameter<typeof apiMutator>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetDashboardSummaryQueryKey(projectId);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getDashboardSummary>>> = ({ signal }) => getDashboardSummary(projectId, { signal, ...requestOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(projectId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getDashboardSummary>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetDashboardSummaryQueryResult = NonNullable<Awaited<ReturnType<typeof getDashboardSummary>>>
+export type GetDashboardSummaryQueryError = HTTPValidationError
+
+
+/**
+ * @summary Get Dashboard Summary
+ */
+
+export function useGetDashboardSummary<TData = Awaited<ReturnType<typeof getDashboardSummary>>, TError = HTTPValidationError>(
+ projectId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getDashboardSummary>>, TError, TData>, request?: SecondParameter<typeof apiMutator>}
+  
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetDashboardSummaryQueryOptions(projectId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * @summary Get Dashboard Workload
+ */
+export type getDashboardWorkloadResponse200 = {
+  data: EnvelopeDashboardWorkloadOut
+  status: 200
+}
+
+export type getDashboardWorkloadResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+    
+export type getDashboardWorkloadResponseSuccess = (getDashboardWorkloadResponse200) & {
+  headers: Headers;
+};
+export type getDashboardWorkloadResponseError = (getDashboardWorkloadResponse422) & {
+  headers: Headers;
+};
+
+export type getDashboardWorkloadResponse = (getDashboardWorkloadResponseSuccess | getDashboardWorkloadResponseError)
+
+export const getGetDashboardWorkloadUrl = (projectId: string,) => {
+
+
+  
+
+  return `/api/v1/projects/${projectId}/dashboard/workload`
+}
+
+export const getDashboardWorkload = async (projectId: string, options?: RequestInit): Promise<getDashboardWorkloadResponse> => {
+  
+  return apiMutator<getDashboardWorkloadResponse>(getGetDashboardWorkloadUrl(projectId),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+
+
+export const getGetDashboardWorkloadQueryKey = (projectId?: string,) => {
+    return [
+    `/api/v1/projects/${projectId}/dashboard/workload`
+    ] as const;
+    }
+
+    
+export const getGetDashboardWorkloadQueryOptions = <TData = Awaited<ReturnType<typeof getDashboardWorkload>>, TError = HTTPValidationError>(projectId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getDashboardWorkload>>, TError, TData>, request?: SecondParameter<typeof apiMutator>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetDashboardWorkloadQueryKey(projectId);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getDashboardWorkload>>> = ({ signal }) => getDashboardWorkload(projectId, { signal, ...requestOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(projectId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getDashboardWorkload>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetDashboardWorkloadQueryResult = NonNullable<Awaited<ReturnType<typeof getDashboardWorkload>>>
+export type GetDashboardWorkloadQueryError = HTTPValidationError
+
+
+/**
+ * @summary Get Dashboard Workload
+ */
+
+export function useGetDashboardWorkload<TData = Awaited<ReturnType<typeof getDashboardWorkload>>, TError = HTTPValidationError>(
+ projectId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getDashboardWorkload>>, TError, TData>, request?: SecondParameter<typeof apiMutator>}
+  
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetDashboardWorkloadQueryOptions(projectId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * @summary Get Dashboard Overdue
+ */
+export type getDashboardOverdueResponse200 = {
+  data: EnvelopePageDashboardOverdueItemOut
+  status: 200
+}
+
+export type getDashboardOverdueResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+    
+export type getDashboardOverdueResponseSuccess = (getDashboardOverdueResponse200) & {
+  headers: Headers;
+};
+export type getDashboardOverdueResponseError = (getDashboardOverdueResponse422) & {
+  headers: Headers;
+};
+
+export type getDashboardOverdueResponse = (getDashboardOverdueResponseSuccess | getDashboardOverdueResponseError)
+
+export const getGetDashboardOverdueUrl = (projectId: string,
+    params?: GetDashboardOverdueParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/v1/projects/${projectId}/dashboard/overdue?${stringifiedParams}` : `/api/v1/projects/${projectId}/dashboard/overdue`
+}
+
+export const getDashboardOverdue = async (projectId: string,
+    params?: GetDashboardOverdueParams, options?: RequestInit): Promise<getDashboardOverdueResponse> => {
+  
+  return apiMutator<getDashboardOverdueResponse>(getGetDashboardOverdueUrl(projectId,params),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+
+
+export const getGetDashboardOverdueQueryKey = (projectId?: string,
+    params?: GetDashboardOverdueParams,) => {
+    return [
+    `/api/v1/projects/${projectId}/dashboard/overdue`, ...(params ? [params]: [])
+    ] as const;
+    }
+
+    
+export const getGetDashboardOverdueQueryOptions = <TData = Awaited<ReturnType<typeof getDashboardOverdue>>, TError = HTTPValidationError>(projectId: string,
+    params?: GetDashboardOverdueParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getDashboardOverdue>>, TError, TData>, request?: SecondParameter<typeof apiMutator>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetDashboardOverdueQueryKey(projectId,params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getDashboardOverdue>>> = ({ signal }) => getDashboardOverdue(projectId,params, { signal, ...requestOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(projectId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getDashboardOverdue>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetDashboardOverdueQueryResult = NonNullable<Awaited<ReturnType<typeof getDashboardOverdue>>>
+export type GetDashboardOverdueQueryError = HTTPValidationError
+
+
+/**
+ * @summary Get Dashboard Overdue
+ */
+
+export function useGetDashboardOverdue<TData = Awaited<ReturnType<typeof getDashboardOverdue>>, TError = HTTPValidationError>(
+ projectId: string,
+    params?: GetDashboardOverdueParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getDashboardOverdue>>, TError, TData>, request?: SecondParameter<typeof apiMutator>}
+  
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetDashboardOverdueQueryOptions(projectId,params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * @summary Get Dashboard Ai Insights
+ */
+export type getDashboardAiInsightsResponse200 = {
+  data: EnvelopeDashboardInsightsOut
+  status: 200
+}
+
+export type getDashboardAiInsightsResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+    
+export type getDashboardAiInsightsResponseSuccess = (getDashboardAiInsightsResponse200) & {
+  headers: Headers;
+};
+export type getDashboardAiInsightsResponseError = (getDashboardAiInsightsResponse422) & {
+  headers: Headers;
+};
+
+export type getDashboardAiInsightsResponse = (getDashboardAiInsightsResponseSuccess | getDashboardAiInsightsResponseError)
+
+export const getGetDashboardAiInsightsUrl = (projectId: string,) => {
+
+
+  
+
+  return `/api/v1/projects/${projectId}/dashboard/ai-insights`
+}
+
+export const getDashboardAiInsights = async (projectId: string, options?: RequestInit): Promise<getDashboardAiInsightsResponse> => {
+  
+  return apiMutator<getDashboardAiInsightsResponse>(getGetDashboardAiInsightsUrl(projectId),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+
+
+export const getGetDashboardAiInsightsQueryKey = (projectId?: string,) => {
+    return [
+    `/api/v1/projects/${projectId}/dashboard/ai-insights`
+    ] as const;
+    }
+
+    
+export const getGetDashboardAiInsightsQueryOptions = <TData = Awaited<ReturnType<typeof getDashboardAiInsights>>, TError = HTTPValidationError>(projectId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getDashboardAiInsights>>, TError, TData>, request?: SecondParameter<typeof apiMutator>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetDashboardAiInsightsQueryKey(projectId);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getDashboardAiInsights>>> = ({ signal }) => getDashboardAiInsights(projectId, { signal, ...requestOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(projectId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getDashboardAiInsights>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetDashboardAiInsightsQueryResult = NonNullable<Awaited<ReturnType<typeof getDashboardAiInsights>>>
+export type GetDashboardAiInsightsQueryError = HTTPValidationError
+
+
+/**
+ * @summary Get Dashboard Ai Insights
+ */
+
+export function useGetDashboardAiInsights<TData = Awaited<ReturnType<typeof getDashboardAiInsights>>, TError = HTTPValidationError>(
+ projectId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getDashboardAiInsights>>, TError, TData>, request?: SecondParameter<typeof apiMutator>}
+  
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetDashboardAiInsightsQueryOptions(projectId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
 /**
  * @summary List Skills
  */
