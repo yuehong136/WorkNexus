@@ -24,6 +24,11 @@ class Settings(BaseSettings):
     # a "multirag" provider slots in after the AI endpoint is live-verified.
     intake_triage_provider: str = "rules"
 
+    # Dashboard AI insights provider (M7 decision A, roadmap D7). v0.1 only "rules"
+    # (deterministic, computed on demand from aggregated metrics); a "multirag" provider
+    # slots in once the AI endpoint is live-verified.
+    dashboard_insights_provider: str = "rules"
+
     mcp_auth_token: str = "change-me-mcp-token"
 
     cors_origins: list[str] = ["http://localhost:5173"]
