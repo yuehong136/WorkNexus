@@ -31,6 +31,7 @@ from worknexus.modules.audit.service import AuditAction
 from worknexus.modules.identity.models import ProjectMember, RoleBinding, User
 from worknexus.modules.intake.models import IntakeRequest
 from worknexus.modules.intake.schemas import (
+    ACTIONABLE_STATUSES,
     TERMINAL_STATUSES,
     IntakeAcceptIn,
     IntakeCreateIn,
@@ -293,6 +294,26 @@ async def list_intake_requests(
         .scalars()
         .all()
     )
+    return await _build_intake_outs(db, list(rows)), total
+
+
+async def list_pending_intake(
+    db: AsyncSession, actor: Actor, *, project_ids: set[str] | None, limit: int
+) -> tuple[list[IntakeOut], int]:
+    """Home: actionable (non-terminal) intake across the caller's projects. project_ids=None
+    means all tenant projects (owner/admin); an empty set means no access. Read-only — no
+    snooze mutation (snoozed items are actionable whether or not they have expired)."""
+    if project_ids is not None and not project_ids:
+        return [], 0
+    base = select(IntakeRequest).where(
+        IntakeRequest.tenant_id == actor.tenant_id,
+        IntakeRequest.deleted_at.is_(None),
+        IntakeRequest.status.in_(ACTIONABLE_STATUSES),
+    )
+    if project_ids is not None:
+        base = base.where(IntakeRequest.project_id.in_(project_ids))
+    total = (await db.execute(select(func.count()).select_from(base.subquery()))).scalar_one()
+    rows = (await db.execute(base.order_by(IntakeRequest.created_at.desc()).limit(limit))).scalars().all()
     return await _build_intake_outs(db, list(rows)), total
 
 
