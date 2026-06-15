@@ -8,6 +8,7 @@ export const paths = {
   workItems: (projectId: string) => `/projects/${projectId}/work-items`,
   board: (projectId: string) => `/projects/${projectId}/board`,
   intake: (projectId: string) => `/projects/${projectId}/intake`,
+  dashboard: (projectId: string) => `/projects/${projectId}/dashboard`,
   ai: (projectId: string) => `/projects/${projectId}/ai`,
   skills: () => '/skills',
   settingsMembers: () => '/settings/members',

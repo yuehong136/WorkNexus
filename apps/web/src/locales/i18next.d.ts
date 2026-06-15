@@ -1,5 +1,6 @@
 import type auth from './zh-CN/auth'
 import type common from './zh-CN/common'
+import type dashboard from './zh-CN/dashboard'
 import type intake from './zh-CN/intake'
 import type projects from './zh-CN/projects'
 import type settings from './zh-CN/settings'
@@ -17,6 +18,7 @@ declare module 'i18next' {
       projects: typeof projects
       workItems: typeof workItems
       intake: typeof intake
+      dashboard: typeof dashboard
       skills: typeof skills
       workchat: typeof workchat
     }

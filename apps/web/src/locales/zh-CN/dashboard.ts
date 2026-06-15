@@ -1,0 +1,76 @@
+export default {
+  title: '项目仪表盘',
+  description: '基于真实业务数据的项目级统计与 AI 洞察',
+  backToProject: '返回项目',
+  empty: '该项目暂无工作项，创建工作项后这里会显示统计。',
+  cards: {
+    total: '工作项总数',
+    highPriority: '高优先级',
+    overdue: '逾期',
+    aiCreated: 'AI 创建',
+    intakeRequests: 'Intake 请求',
+    intakeConverted: 'Intake 转化',
+    conversionRate: '转化率 {{rate}}',
+  },
+  distribution: {
+    status: '状态分布',
+    type: '类型分布',
+    priority: '优先级分布',
+    source: '来源分布',
+  },
+  trend: {
+    title: '近 7 天创建 / 完成趋势',
+    created: '创建',
+    completed: '完成',
+  },
+  workload: {
+    title: '负责人负载',
+    assignee: '负责人',
+    unassigned: '未指派',
+    total: '总数',
+    overdue: '逾期',
+    highPriority: '高优先级',
+    empty: '暂无负载数据',
+  },
+  overdue: {
+    title: '逾期工作项',
+    empty: '没有逾期工作项',
+    unassigned: '未指派',
+    daysValue: '{{count}} 天',
+    columns: {
+      key: '编号',
+      title: '标题',
+      priority: '优先级',
+      assignee: '负责人',
+      dueAt: '截止时间',
+      daysOverdue: '逾期',
+    },
+  },
+  insights: {
+    title: 'AI 洞察',
+    advisoryNote: '由规则引擎生成，仅供参考，不会自动触发任何动作。',
+    empty: '暂无需要关注的洞察。',
+    provenance: '来源：{{provider}} v{{version}} · {{time}}',
+    overdue: {
+      title: '{{overdueCount}} 个工作项已逾期',
+      detail: '当前有 {{overdueCount}} 个未完成工作项超过截止时间（占总数 {{overduePercent}}%），建议优先处理逾期项或重新评估排期。',
+    },
+    highPriority: {
+      title: '{{highPriorityCount}} 个高优先级工作项',
+      detail: '有 {{highPriorityCount}} 个高优先级（high / urgent）工作项，建议确认负责人与排期是否到位。',
+    },
+    risk: {
+      title: '{{riskCount}} 个风险 / 事故类工作项',
+      detail: '项目内有 {{riskCount}} 个风险（risk）或事故（incident）类工作项，建议关注其状态与缓解措施。',
+    },
+    workload: {
+      title: '负载分布不均',
+      detail: '{{topAssigneeName}} 当前承担 {{topLoad}} 个工作项，明显高于人均 {{averageLoad}} 个，建议评估是否需要分担。',
+    },
+  },
+  severity: {
+    info: '提示',
+    warning: '注意',
+    critical: '严重',
+  },
+} as const

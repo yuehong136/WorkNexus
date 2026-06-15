@@ -58,6 +58,7 @@ export default {
     notFound: '项目不存在或无权访问',
     workItems: '工作项',
     intake: '请求池',
+    dashboard: '仪表盘',
     aiChat: 'AI 助手',
   },
   summary: {
