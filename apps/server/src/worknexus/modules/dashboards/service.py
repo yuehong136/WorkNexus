@@ -17,6 +17,7 @@ from worknexus.modules.dashboards.insights import InsightInput, get_insights_eng
 from worknexus.modules.dashboards.schemas import (
     DashboardInsightsOut,
     DashboardOverdueItemOut,
+    DashboardSnapshotOut,
     DashboardSummaryOut,
     DashboardWorkloadOut,
     InsightOut,
@@ -80,4 +81,24 @@ async def get_dashboard_insights(db: AsyncSession, actor: Actor, project_id: str
     return DashboardInsightsOut(
         insights=[InsightOut.model_validate(i) for i in insights],
         provenance=InsightProvenance(provider=engine.provider, version=engine.version, generated_at=_now()),
+    )
+
+
+async def get_project_dashboard_snapshot(
+    db: AsyncSession, actor: Actor, project_id: str, *, overdue_limit: int = 10
+) -> DashboardSnapshotOut:
+    """One read-only bundle for the MCP tool: summary + workload + capped overdue preview +
+    rule insights. Composes the same domain read-models; overdue is a top-N preview here."""
+    summary = await get_dashboard_summary(db, actor, project_id)
+    workload = await get_dashboard_workload(db, actor, project_id)
+    insights = await get_dashboard_insights(db, actor, project_id)
+    rows, total = await work_items_service.list_project_overdue_work_items(
+        db, actor, project_id, PageParams(page=1, page_size=overdue_limit)
+    )
+    return DashboardSnapshotOut(
+        summary=summary,
+        workload=workload.items,
+        overdue_count=total,
+        overdue_preview=[DashboardOverdueItemOut.model_validate(r) for r in rows],
+        insights=insights,
     )
