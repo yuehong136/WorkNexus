@@ -23,11 +23,13 @@ import type {
   AgentActionRejectIn,
   CommentCreateIn,
   EnvelopeAgentActionOut,
+  EnvelopeAiConnectionOut,
   EnvelopeCommentOut,
   EnvelopeCurrentUserContext,
   EnvelopeDashboardInsightsOut,
   EnvelopeDashboardSummaryOut,
   EnvelopeDashboardWorkloadOut,
+  EnvelopeHomeSnapshotOut,
   EnvelopeIntakeOut,
   EnvelopeInviteCreatedOut,
   EnvelopeInviteOut,
@@ -42,6 +44,7 @@ import type {
   EnvelopeMessageOut,
   EnvelopeNoneType,
   EnvelopePageAgentActionOut,
+  EnvelopePageAuditLogOut,
   EnvelopePageDashboardOverdueItemOut,
   EnvelopePageIntakeOut,
   EnvelopePageInviteOut,
@@ -68,6 +71,7 @@ import type {
   IntakeUpdateIn,
   InviteCreateIn,
   ListAgentActionsParams,
+  ListAuditLogsParams,
   ListIntakeParams,
   ListInvitesParams,
   ListMessagesParams,
@@ -77,6 +81,7 @@ import type {
   ListWorkItemsParams,
   LoginIn,
   MessageCreateIn,
+  ProfileUpdateIn,
   ProjectCreateIn,
   ProjectMemberAddIn,
   ProjectMemberUpdateIn,
@@ -623,6 +628,97 @@ export function useGetMe<TData = Awaited<ReturnType<typeof getMe>>, TError = unk
 
 
 
+/**
+ * @summary Update Me
+ */
+export type updateMeResponse200 = {
+  data: EnvelopeCurrentUserContext
+  status: 200
+}
+
+export type updateMeResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+    
+export type updateMeResponseSuccess = (updateMeResponse200) & {
+  headers: Headers;
+};
+export type updateMeResponseError = (updateMeResponse422) & {
+  headers: Headers;
+};
+
+export type updateMeResponse = (updateMeResponseSuccess | updateMeResponseError)
+
+export const getUpdateMeUrl = () => {
+
+
+  
+
+  return `/api/v1/me`
+}
+
+export const updateMe = async (profileUpdateIn: ProfileUpdateIn, options?: RequestInit): Promise<updateMeResponse> => {
+  
+  return apiMutator<updateMeResponse>(getUpdateMeUrl(),
+  {      
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      profileUpdateIn,)
+  }
+);}
+
+
+
+
+export const getUpdateMeMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateMe>>, TError,{data: ProfileUpdateIn}, TContext>, request?: SecondParameter<typeof apiMutator>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateMe>>, TError,{data: ProfileUpdateIn}, TContext> => {
+
+const mutationKey = ['updateMe'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateMe>>, {data: ProfileUpdateIn}> = (props) => {
+          const {data} = props ?? {};
+
+          return  updateMe(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateMeMutationResult = NonNullable<Awaited<ReturnType<typeof updateMe>>>
+    export type UpdateMeMutationBody = ProfileUpdateIn
+    export type UpdateMeMutationError = HTTPValidationError
+
+    /**
+ * @summary Update Me
+ */
+export const useUpdateMe = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateMe>>, TError,{data: ProfileUpdateIn}, TContext>, request?: SecondParameter<typeof apiMutator>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateMe>>,
+        TError,
+        {data: ProfileUpdateIn},
+        TContext
+      > => {
+
+      const mutationOptions = getUpdateMeMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+    
 /**
  * @summary List Users
  */
@@ -5551,3 +5647,278 @@ export const useRejectAgentAction = <TError = HTTPValidationError,
 
       return useMutation(mutationOptions);
     }
+    
+/**
+ * @summary List Audit Logs
+ */
+export type listAuditLogsResponse200 = {
+  data: EnvelopePageAuditLogOut
+  status: 200
+}
+
+export type listAuditLogsResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+    
+export type listAuditLogsResponseSuccess = (listAuditLogsResponse200) & {
+  headers: Headers;
+};
+export type listAuditLogsResponseError = (listAuditLogsResponse422) & {
+  headers: Headers;
+};
+
+export type listAuditLogsResponse = (listAuditLogsResponseSuccess | listAuditLogsResponseError)
+
+export const getListAuditLogsUrl = (params?: ListAuditLogsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/v1/audit-logs?${stringifiedParams}` : `/api/v1/audit-logs`
+}
+
+export const listAuditLogs = async (params?: ListAuditLogsParams, options?: RequestInit): Promise<listAuditLogsResponse> => {
+  
+  return apiMutator<listAuditLogsResponse>(getListAuditLogsUrl(params),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+
+
+export const getListAuditLogsQueryKey = (params?: ListAuditLogsParams,) => {
+    return [
+    `/api/v1/audit-logs`, ...(params ? [params]: [])
+    ] as const;
+    }
+
+    
+export const getListAuditLogsQueryOptions = <TData = Awaited<ReturnType<typeof listAuditLogs>>, TError = HTTPValidationError>(params?: ListAuditLogsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listAuditLogs>>, TError, TData>, request?: SecondParameter<typeof apiMutator>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListAuditLogsQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listAuditLogs>>> = ({ signal }) => listAuditLogs(params, { signal, ...requestOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listAuditLogs>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListAuditLogsQueryResult = NonNullable<Awaited<ReturnType<typeof listAuditLogs>>>
+export type ListAuditLogsQueryError = HTTPValidationError
+
+
+/**
+ * @summary List Audit Logs
+ */
+
+export function useListAuditLogs<TData = Awaited<ReturnType<typeof listAuditLogs>>, TError = HTTPValidationError>(
+ params?: ListAuditLogsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listAuditLogs>>, TError, TData>, request?: SecondParameter<typeof apiMutator>}
+  
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListAuditLogsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * @summary Get Home
+ */
+export type getHomeResponse200 = {
+  data: EnvelopeHomeSnapshotOut
+  status: 200
+}
+    
+export type getHomeResponseSuccess = (getHomeResponse200) & {
+  headers: Headers;
+};
+;
+
+export type getHomeResponse = (getHomeResponseSuccess)
+
+export const getGetHomeUrl = () => {
+
+
+  
+
+  return `/api/v1/home`
+}
+
+export const getHome = async ( options?: RequestInit): Promise<getHomeResponse> => {
+  
+  return apiMutator<getHomeResponse>(getGetHomeUrl(),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+
+
+export const getGetHomeQueryKey = () => {
+    return [
+    `/api/v1/home`
+    ] as const;
+    }
+
+    
+export const getGetHomeQueryOptions = <TData = Awaited<ReturnType<typeof getHome>>, TError = unknown>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getHome>>, TError, TData>, request?: SecondParameter<typeof apiMutator>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetHomeQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getHome>>> = ({ signal }) => getHome({ signal, ...requestOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getHome>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetHomeQueryResult = NonNullable<Awaited<ReturnType<typeof getHome>>>
+export type GetHomeQueryError = unknown
+
+
+/**
+ * @summary Get Home
+ */
+
+export function useGetHome<TData = Awaited<ReturnType<typeof getHome>>, TError = unknown>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getHome>>, TError, TData>, request?: SecondParameter<typeof apiMutator>}
+  
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetHomeQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * @summary Get Ai Connection
+ */
+export type getAiConnectionResponse200 = {
+  data: EnvelopeAiConnectionOut
+  status: 200
+}
+    
+export type getAiConnectionResponseSuccess = (getAiConnectionResponse200) & {
+  headers: Headers;
+};
+;
+
+export type getAiConnectionResponse = (getAiConnectionResponseSuccess)
+
+export const getGetAiConnectionUrl = () => {
+
+
+  
+
+  return `/api/v1/settings/ai-connection`
+}
+
+export const getAiConnection = async ( options?: RequestInit): Promise<getAiConnectionResponse> => {
+  
+  return apiMutator<getAiConnectionResponse>(getGetAiConnectionUrl(),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+
+
+export const getGetAiConnectionQueryKey = () => {
+    return [
+    `/api/v1/settings/ai-connection`
+    ] as const;
+    }
+
+    
+export const getGetAiConnectionQueryOptions = <TData = Awaited<ReturnType<typeof getAiConnection>>, TError = unknown>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAiConnection>>, TError, TData>, request?: SecondParameter<typeof apiMutator>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetAiConnectionQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAiConnection>>> = ({ signal }) => getAiConnection({ signal, ...requestOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAiConnection>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetAiConnectionQueryResult = NonNullable<Awaited<ReturnType<typeof getAiConnection>>>
+export type GetAiConnectionQueryError = unknown
+
+
+/**
+ * @summary Get Ai Connection
+ */
+
+export function useGetAiConnection<TData = Awaited<ReturnType<typeof getAiConnection>>, TError = unknown>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAiConnection>>, TError, TData>, request?: SecondParameter<typeof apiMutator>}
+  
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetAiConnectionQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
