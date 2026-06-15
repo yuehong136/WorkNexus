@@ -325,6 +325,7 @@ Tailwind 4 CSS-first，单一真相源在 `styles/globals.css`：
 | 看板拖拽 | @dnd-kit（`DndContext` + `useDraggable`/`useDroppable`）；放置到新状态列即调 transition mutation 落库，非法流转由后端 2002 拒绝并 toast；禁止手写 HTML5 `draggable` 事件 |
 | AI / 流式 SSE | 唯一封装 `lib/sse.ts` 的 `streamSSE(path, body, { signal, onEvent })`（fetch + ReadableStream + `credentials:'include'`，按 `data:` 分帧 `JSON.parse`，畸形帧跳过不抛）；feature 侧用 `use<Feature>Run` hook 包装（累积流式增量、终态按 Key Factory invalidate）；事件为后端定义的干净 schema（如 `message_delta` / `agent_action` / `done`）；**禁止 `EventSource`**（需 POST + cookie）、禁止页面内裸 fetch 流 |
 | AI 动作确认卡片 | 统一 `AgentActionCard`（动作类型 i18n + 参数/diff + 状态 Badge）；卡片本身即确认面：pending 显示 批准/拒绝 直接调 mutation，**不再套 `ConfirmDialog`**；approve/reject 成功按 Key Factory invalidate agentActions；失败（权限/过期等）由 `lib/query-client.ts` 全局 onError toast |
+| AI 建议（advisory）卡片 | 统一 `TriageSuggestionCard` 形态：呈现**只读**的 AI 建议（摘要/分类/类型·优先级 + provenance `provider/version`），明确标注"仅供参考、不自动应用"；"采纳建议"按钮只把 suggested_* **预填**进对应的创建/转换表单（如 `ConvertToWorkItemDialog`），落库仍由用户在表单内提交确认。**区别于"确认即执行"的 `AgentActionCard`**——advisory 卡片自身不触发任何写动作 |
 
 ### 5.6 后端统一写法手册
 

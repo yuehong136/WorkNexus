@@ -57,6 +57,7 @@ export default {
     archived: '项目已归档',
     notFound: '项目不存在或无权访问',
     workItems: '工作项',
+    intake: '请求池',
     aiChat: 'AI 助手',
   },
   summary: {

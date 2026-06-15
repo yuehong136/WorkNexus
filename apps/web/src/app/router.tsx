@@ -75,6 +75,13 @@ export const router = createBrowserRouter([
             },
           },
           {
+            path: paths.intake(':projectId'),
+            lazy: async () => {
+              const { IntakePage } = await import('@/features/intake/routes/intake-page')
+              return { Component: IntakePage }
+            },
+          },
+          {
             path: paths.ai(':projectId'),
             lazy: async () => {
               const { AIPage } = await import('@/features/workchat/routes/ai-page')

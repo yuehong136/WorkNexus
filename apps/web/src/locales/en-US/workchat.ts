@@ -26,6 +26,8 @@ export default {
     update_work_item: 'Update work item',
     transition_work_item: 'Transition work item',
     comment_work_item: 'Comment on work item',
+    create_intake_request: 'Create intake request',
+    accept_intake_request: 'Accept & convert intake',
   },
   actions: {
     approve: 'Approve',
