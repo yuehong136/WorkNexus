@@ -1,8 +1,10 @@
-from datetime import UTC, datetime
+from collections.abc import Sequence
+from datetime import UTC, date, datetime, time, timedelta
+from enum import StrEnum
 from typing import Any
 
 from pydantic import ValidationError
-from sqlalchemy import func, select, update
+from sqlalchemy import case, func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from worknexus.core.access import ScopeType, SubjectType
@@ -25,6 +27,8 @@ from worknexus.modules.work_items.schemas import (
     CommentAuthorType,
     CommentCreateIn,
     CommentOut,
+    DailyCount,
+    OverdueWorkItem,
     ProjectActivityOut,
     ProjectSummaryOut,
     RelationCreateIn,
@@ -33,6 +37,7 @@ from worknexus.modules.work_items.schemas import (
     RelationType,
     WorkItemBriefOut,
     WorkItemCreateIn,
+    WorkItemMetrics,
     WorkItemOut,
     WorkItemPriority,
     WorkItemSort,
@@ -41,11 +46,16 @@ from worknexus.modules.work_items.schemas import (
     WorkItemTransitionIn,
     WorkItemType,
     WorkItemUpdateIn,
+    WorkloadBucket,
 )
 
 
 def _now() -> datetime:
     return datetime.now(UTC)
+
+
+def _aware(value: datetime) -> datetime:
+    return value if value.tzinfo is not None else value.replace(tzinfo=UTC)
 
 
 def validate_custom_fields(item_type: WorkItemType, data: dict[str, Any]) -> dict[str, Any]:
@@ -665,48 +675,210 @@ async def delete_relation(db: AsyncSession, actor: Actor, work_item_id: str, rel
     await db.commit()
 
 
-# --- project summary (backfills the project-overview stats deferred from M2) ---
+# --- project summary + M7 dashboard metrics --------------------------------------
+#
+# `get_project_work_item_metrics` is the single source of truth for the project's
+# work-item aggregates (status/type/priority/source distributions, high-priority /
+# overdue / ai-created counts, 7-day created/completed trends). Both the M3 project
+# overview (`get_project_summary`) and the M7 dashboard read it so their numbers can
+# never drift (docs/modules/dashboard.md decision B).
+
+_OPEN_STATUSES = [s for s in WorkItemStatus if s not in (WorkItemStatus.DONE, WorkItemStatus.CANCELLED)]
+_HIGH_PRIORITIES = [WorkItemPriority.HIGH, WorkItemPriority.URGENT]
+_AI_SOURCES = [WorkItemSource.AI_CHAT, WorkItemSource.MCP]
+_PRIORITY_RANK = case(
+    (WorkItem.priority == WorkItemPriority.URGENT, 0),
+    (WorkItem.priority == WorkItemPriority.HIGH, 1),
+    (WorkItem.priority == WorkItemPriority.MEDIUM, 2),
+    (WorkItem.priority == WorkItemPriority.LOW, 3),
+    else_=99,
+)
+# UTC date of a timestamptz column, timezone-stable regardless of the session TimeZone.
+_UTC_DAY = func.date(func.timezone("UTC", WorkItem.created_at))
+_ACTIVITY_UTC_DAY = func.date(func.timezone("UTC", WorkItemActivity.created_at))
 
 
-async def get_project_summary(db: AsyncSession, actor: Actor, project_id: str) -> ProjectSummaryOut:
+def _grouped(rows: Sequence[Any], enum_cls: type[StrEnum]) -> dict[str, int]:
+    counts = {str(v): 0 for v in enum_cls}
+    for value, count in rows:
+        counts[str(value)] = count
+    return counts
+
+
+def _build_trend(today: date, rows: Sequence[Any]) -> list[DailyCount]:
+    """Zero-fill the last 7 UTC days (oldest first) from (date, count) rows."""
+    by_day = {(d.isoformat() if hasattr(d, "isoformat") else str(d)): int(c) for d, c in rows}
+    days = [(today - timedelta(days=i)).isoformat() for i in range(6, -1, -1)]
+    return [DailyCount(date=day, count=by_day.get(day, 0)) for day in days]
+
+
+async def get_project_work_item_metrics(db: AsyncSession, actor: Actor, project_id: str) -> WorkItemMetrics:
     await projects_service.get_project(db, project_id, actor.tenant_id)
+    now = _now()
+    window_start = datetime.combine(now.date() - timedelta(days=6), time.min, tzinfo=UTC)
+    conds = (
+        WorkItem.tenant_id == actor.tenant_id,
+        WorkItem.project_id == project_id,
+        WorkItem.deleted_at.is_(None),
+    )
+
+    async def _count(*extra: Any) -> int:
+        return (await db.execute(select(func.count()).select_from(WorkItem).where(*conds, *extra))).scalar_one()
+
+    async def _dist(column: Any, enum_cls: type[StrEnum]) -> dict[str, int]:
+        rows = (await db.execute(select(column, func.count()).where(*conds).group_by(column))).all()
+        return _grouped(rows, enum_cls)
+
+    status_counts = await _dist(WorkItem.status, WorkItemStatus)
+    type_counts = await _dist(WorkItem.type, WorkItemType)
+    priority_counts = await _dist(WorkItem.priority, WorkItemPriority)
+    source_counts = await _dist(WorkItem.source, WorkItemSource)
+    high_priority_count = await _count(WorkItem.priority.in_(_HIGH_PRIORITIES))
+    overdue_count = await _count(
+        WorkItem.due_at.is_not(None), WorkItem.due_at < now, WorkItem.status.in_(_OPEN_STATUSES)
+    )
+    ai_created_count = await _count(WorkItem.source.in_(_AI_SOURCES))
+
+    created_rows = (
+        await db.execute(
+            select(_UTC_DAY, func.count()).where(*conds, WorkItem.created_at >= window_start).group_by(_UTC_DAY)
+        )
+    ).all()
+    completed_rows = (
+        await db.execute(
+            select(_ACTIVITY_UTC_DAY, func.count())
+            .select_from(WorkItemActivity)
+            .join(WorkItem, WorkItem.id == WorkItemActivity.work_item_id)
+            .where(
+                *conds,
+                WorkItemActivity.action == ActivityAction.STATUS_CHANGED,
+                WorkItemActivity.after["status"].astext == WorkItemStatus.DONE,
+                WorkItemActivity.created_at >= window_start,
+            )
+            .group_by(_ACTIVITY_UTC_DAY)
+        )
+    ).all()
+
+    return WorkItemMetrics(
+        total_count=sum(status_counts.values()),
+        status_counts=status_counts,
+        type_counts=type_counts,
+        priority_counts=priority_counts,
+        source_counts=source_counts,
+        high_priority_count=high_priority_count,
+        overdue_count=overdue_count,
+        ai_created_count=ai_created_count,
+        created_trend=_build_trend(now.date(), created_rows),
+        completed_trend=_build_trend(now.date(), completed_rows),
+    )
+
+
+async def list_project_overdue_work_items(
+    db: AsyncSession, actor: Actor, project_id: str, params: PageParams
+) -> tuple[list[OverdueWorkItem], int]:
+    await projects_service.get_project(db, project_id, actor.tenant_id)
+    now = _now()
+    base = select(WorkItem).where(
+        WorkItem.tenant_id == actor.tenant_id,
+        WorkItem.project_id == project_id,
+        WorkItem.deleted_at.is_(None),
+        WorkItem.due_at.is_not(None),
+        WorkItem.due_at < now,
+        WorkItem.status.in_(_OPEN_STATUSES),
+    )
+    total = (await db.execute(select(func.count()).select_from(base.subquery()))).scalar_one()
+    items = (
+        (
+            await db.execute(
+                base.order_by(WorkItem.due_at.asc(), _PRIORITY_RANK.asc(), WorkItem.created_at.desc())
+                .offset(params.offset)
+                .limit(params.page_size)
+            )
+        )
+        .scalars()
+        .all()
+    )
+    users = await _users_by_ids(db, {i.assignee_id for i in items if i.assignee_id})
+    rows: list[OverdueWorkItem] = []
+    for i in items:
+        if i.due_at is None:  # guaranteed by the query; narrows the optional for the type checker
+            continue
+        due = _aware(i.due_at)
+        rows.append(
+            OverdueWorkItem(
+                id=i.id,
+                key=i.key,
+                title=i.title,
+                status=WorkItemStatus(i.status),
+                type=WorkItemType(i.type),
+                priority=WorkItemPriority(i.priority),
+                assignee_id=i.assignee_id,
+                assignee=UserBriefOut.model_validate(users[i.assignee_id]) if i.assignee_id in users else None,
+                due_at=due,
+                days_overdue=max(0, (now - due).days),
+                source=WorkItemSource(i.source),
+                created_at=i.created_at,
+            )
+        )
+    return rows, total
+
+
+async def get_project_workload_metrics(db: AsyncSession, actor: Actor, project_id: str) -> list[WorkloadBucket]:
+    await projects_service.get_project(db, project_id, actor.tenant_id)
+    now = _now()
     conds = (
         WorkItem.tenant_id == actor.tenant_id,
         WorkItem.project_id == project_id,
         WorkItem.deleted_at.is_(None),
     )
     status_rows = (
-        await db.execute(select(WorkItem.status, func.count()).where(*conds).group_by(WorkItem.status))
+        await db.execute(
+            select(WorkItem.assignee_id, WorkItem.status, func.count())
+            .where(*conds)
+            .group_by(WorkItem.assignee_id, WorkItem.status)
+        )
     ).all()
-    status_counts = {str(s): 0 for s in WorkItemStatus}
-    for status, count in status_rows:
-        status_counts[status] = count
-    high_priority_count = (
+    overdue_rows = (
         await db.execute(
-            select(func.count())
-            .select_from(WorkItem)
-            .where(*conds, WorkItem.priority.in_([WorkItemPriority.HIGH, WorkItemPriority.URGENT]))
+            select(WorkItem.assignee_id, func.count())
+            .where(*conds, WorkItem.due_at.is_not(None), WorkItem.due_at < now, WorkItem.status.in_(_OPEN_STATUSES))
+            .group_by(WorkItem.assignee_id)
         )
-    ).scalar_one()
-    overdue_count = (
+    ).all()
+    high_rows = (
         await db.execute(
-            select(func.count())
-            .select_from(WorkItem)
-            .where(
-                *conds,
-                WorkItem.due_at.is_not(None),
-                WorkItem.due_at < _now(),
-                WorkItem.status.not_in([WorkItemStatus.DONE, WorkItemStatus.CANCELLED]),
-            )
+            select(WorkItem.assignee_id, func.count())
+            .where(*conds, WorkItem.priority.in_(_HIGH_PRIORITIES))
+            .group_by(WorkItem.assignee_id)
         )
-    ).scalar_one()
-    ai_created_count = (
-        await db.execute(
-            select(func.count())
-            .select_from(WorkItem)
-            .where(*conds, WorkItem.source.in_([WorkItemSource.AI_CHAT, WorkItemSource.MCP]))
+    ).all()
+
+    buckets: dict[str | None, dict[str, int]] = {}
+    totals: dict[str | None, int] = {}
+    for assignee_id, status, count in status_rows:
+        buckets.setdefault(assignee_id, {})[str(status)] = count
+        totals[assignee_id] = totals.get(assignee_id, 0) + count
+    overdue_by: dict[str | None, int] = {row[0]: row[1] for row in overdue_rows}
+    high_by: dict[str | None, int] = {row[0]: row[1] for row in high_rows}
+
+    users = await _users_by_ids(db, {a for a in buckets if a})
+    result = [
+        WorkloadBucket(
+            assignee_id=assignee_id,
+            assignee=UserBriefOut.model_validate(users[assignee_id]) if assignee_id in users else None,
+            total_count=totals.get(assignee_id, 0),
+            status_counts=status_counts,
+            overdue_count=overdue_by.get(assignee_id, 0),
+            high_priority_count=high_by.get(assignee_id, 0),
         )
-    ).scalar_one()
+        for assignee_id, status_counts in buckets.items()
+    ]
+    result.sort(key=lambda b: b.total_count, reverse=True)
+    return result
+
+
+async def get_project_summary(db: AsyncSession, actor: Actor, project_id: str) -> ProjectSummaryOut:
+    metrics = await get_project_work_item_metrics(db, actor, project_id)
     recent_rows = (
         await db.execute(
             select(WorkItemActivity, WorkItem.key, WorkItem.title)
@@ -734,10 +906,10 @@ async def get_project_summary(db: AsyncSession, actor: Actor, project_id: str) -
         for activity, key, title in recent_rows
     ]
     return ProjectSummaryOut(
-        total_count=sum(status_counts.values()),
-        status_counts=status_counts,
-        high_priority_count=high_priority_count,
-        overdue_count=overdue_count,
-        ai_created_count=ai_created_count,
+        total_count=metrics.total_count,
+        status_counts=metrics.status_counts,
+        high_priority_count=metrics.high_priority_count,
+        overdue_count=metrics.overdue_count,
+        ai_created_count=metrics.ai_created_count,
         recent_activities=recent,
     )

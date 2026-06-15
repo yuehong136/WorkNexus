@@ -18,7 +18,7 @@ prefill the convert form, never auto-applied. Provenance to the converted work i
 from datetime import UTC, datetime
 from typing import Any
 
-from sqlalchemy import func, select
+from sqlalchemy import and_, case, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from worknexus.config import get_settings
@@ -34,6 +34,7 @@ from worknexus.modules.intake.schemas import (
     TERMINAL_STATUSES,
     IntakeAcceptIn,
     IntakeCreateIn,
+    IntakeMetrics,
     IntakeOut,
     IntakeSource,
     IntakeStatus,
@@ -178,6 +179,49 @@ async def _maybe_unsnooze(db: AsyncSession, row: IntakeRequest) -> None:
 def _ensure_actionable(row: IntakeRequest) -> None:
     if IntakeStatus(row.status) in TERMINAL_STATUSES:
         raise BizError(ErrorCode.INTAKE_NOT_ACTIONABLE, f"intake request is already {row.status}")
+
+
+# --- M7 dashboard metrics (read-only; owned here so the口径 stays in the intake domain) ----
+
+
+async def get_project_intake_metrics(db: AsyncSession, actor: Actor, project_id: str) -> IntakeMetrics:
+    """Intake counts for the project dashboard. Expired snoozes are virtually counted as
+    `new` (read-time semantics, no row mutation), matching `_maybe_unsnooze`."""
+    await projects_service.get_project(db, project_id, actor.tenant_id)
+    effective_status = case(
+        (
+            and_(
+                IntakeRequest.status == IntakeStatus.SNOOZED,
+                IntakeRequest.snooze_until.is_not(None),
+                IntakeRequest.snooze_until <= _now(),
+            ),
+            IntakeStatus.NEW.value,
+        ),
+        else_=IntakeRequest.status,
+    )
+    rows = (
+        await db.execute(
+            select(effective_status, func.count())
+            .where(
+                IntakeRequest.tenant_id == actor.tenant_id,
+                IntakeRequest.project_id == project_id,
+                IntakeRequest.deleted_at.is_(None),
+            )
+            .group_by(effective_status)
+        )
+    ).all()
+    status_counts = {str(s): 0 for s in IntakeStatus}
+    for status, count in rows:
+        status_counts[str(status)] = count
+    request_count = sum(status_counts.values())
+    converted_count = status_counts[IntakeStatus.CONVERTED]
+    conversion_rate = round(converted_count / request_count, 4) if request_count else 0.0
+    return IntakeMetrics(
+        request_count=request_count,
+        status_counts=status_counts,
+        converted_count=converted_count,
+        conversion_rate=conversion_rate,
+    )
 
 
 # --- create / read ---------------------------------------------------------------
