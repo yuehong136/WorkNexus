@@ -6,11 +6,9 @@
  */
 
 /**
- * v0.1 confirmable write actions (the four work_items low_write tools).
-
-intake actions (create_intake_request / accept_intake_request) land in M6 when
-intake MCP tools exist; read tools (search / summary) execute directly, never
-becoming an AgentAction.
+ * v0.1 confirmable write actions: the four work_items low_write tools plus the two
+intake low_write tools (M6). Read tools (search / summary / list) execute directly and
+never become an AgentAction.
  */
 export type AgentActionType = typeof AgentActionType[keyof typeof AgentActionType];
 
@@ -21,4 +19,6 @@ export const AgentActionType = {
   update_work_item: 'update_work_item',
   transition_work_item: 'transition_work_item',
   comment_work_item: 'comment_work_item',
+  create_intake_request: 'create_intake_request',
+  accept_intake_request: 'accept_intake_request',
 } as const;

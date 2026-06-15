@@ -1591,6 +1591,453 @@
         }
       }
     },
+    "/api/v1/projects/{project_id}/intake": {
+      "get": {
+        "tags": [
+          "intake"
+        ],
+        "summary": "List Intake",
+        "operationId": "list_intake",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/IntakeStatus"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "name": "source",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/IntakeSource"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Source"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 20,
+              "title": "Page Size"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Envelope_Page_IntakeOut__"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "intake"
+        ],
+        "summary": "Create Intake",
+        "operationId": "create_intake",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Project Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IntakeCreateIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Envelope_IntakeOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/intake/{intake_id}": {
+      "get": {
+        "tags": [
+          "intake"
+        ],
+        "summary": "Get Intake",
+        "operationId": "get_intake",
+        "parameters": [
+          {
+            "name": "intake_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Intake Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Envelope_IntakeOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "intake"
+        ],
+        "summary": "Update Intake",
+        "operationId": "update_intake",
+        "parameters": [
+          {
+            "name": "intake_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Intake Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IntakeUpdateIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Envelope_IntakeOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/intake/{intake_id}/accept": {
+      "post": {
+        "tags": [
+          "intake"
+        ],
+        "summary": "Accept Intake",
+        "operationId": "accept_intake",
+        "parameters": [
+          {
+            "name": "intake_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Intake Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IntakeAcceptIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Envelope_IntakeOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/intake/{intake_id}/reject": {
+      "post": {
+        "tags": [
+          "intake"
+        ],
+        "summary": "Reject Intake",
+        "operationId": "reject_intake",
+        "parameters": [
+          {
+            "name": "intake_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Intake Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IntakeRejectIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Envelope_IntakeOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/intake/{intake_id}/mark-duplicate": {
+      "post": {
+        "tags": [
+          "intake"
+        ],
+        "summary": "Mark Intake Duplicate",
+        "operationId": "mark_intake_duplicate",
+        "parameters": [
+          {
+            "name": "intake_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Intake Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IntakeMarkDuplicateIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Envelope_IntakeOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/intake/{intake_id}/snooze": {
+      "post": {
+        "tags": [
+          "intake"
+        ],
+        "summary": "Snooze Intake",
+        "operationId": "snooze_intake",
+        "parameters": [
+          {
+            "name": "intake_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Intake Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IntakeSnoozeIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Envelope_IntakeOut_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/skills": {
       "get": {
         "tags": [
@@ -2608,10 +3055,12 @@
           "create_work_item",
           "update_work_item",
           "transition_work_item",
-          "comment_work_item"
+          "comment_work_item",
+          "create_intake_request",
+          "accept_intake_request"
         ],
         "title": "AgentActionType",
-        "description": "v0.1 confirmable write actions (the four work_items low_write tools).\n\nintake actions (create_intake_request / accept_intake_request) land in M6 when\nintake MCP tools exist; read tools (search / summary) execute directly, never\nbecoming an AgentAction."
+        "description": "v0.1 confirmable write actions: the four work_items low_write tools plus the two\nintake low_write tools (M6). Read tools (search / summary / list) execute directly and\nnever become an AgentAction."
       },
       "AgentOut": {
         "properties": {
@@ -2903,6 +3352,32 @@
         "type": "object",
         "title": "Envelope[CurrentUserContext]"
       },
+      "Envelope_IntakeOut_": {
+        "properties": {
+          "code": {
+            "type": "integer",
+            "title": "Code",
+            "default": 0
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "default": "ok"
+          },
+          "data": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/IntakeOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "title": "Envelope[IntakeOut]"
+      },
       "Envelope_InviteCreatedOut_": {
         "properties": {
           "code": {
@@ -3052,6 +3527,32 @@
         },
         "type": "object",
         "title": "Envelope[Page[AgentActionOut]]"
+      },
+      "Envelope_Page_IntakeOut__": {
+        "properties": {
+          "code": {
+            "type": "integer",
+            "title": "Code",
+            "default": 0
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "default": "ok"
+          },
+          "data": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Page_IntakeOut_"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "title": "Envelope[Page[IntakeOut]]"
       },
       "Envelope_Page_InviteOut__": {
         "properties": {
@@ -3623,6 +4124,424 @@
         ],
         "title": "IdentityProvider"
       },
+      "IntakeAcceptIn": {
+        "properties": {
+          "type": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/WorkItemType"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 300,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "priority": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/WorkItemPriority"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "assigneeId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assigneeid"
+          }
+        },
+        "type": "object",
+        "title": "IntakeAcceptIn",
+        "description": "Overrides applied to the converted work item; unset fields fall back to the AI\nsuggestions, then to defaults (type=task, priority=medium)."
+      },
+      "IntakeCreateIn": {
+        "properties": {
+          "title": {
+            "type": "string",
+            "maxLength": 300,
+            "minLength": 1,
+            "title": "Title"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          }
+        },
+        "type": "object",
+        "required": [
+          "title"
+        ],
+        "title": "IntakeCreateIn"
+      },
+      "IntakeMarkDuplicateIn": {
+        "properties": {
+          "duplicateWorkItemId": {
+            "type": "string",
+            "title": "Duplicateworkitemid"
+          }
+        },
+        "type": "object",
+        "required": [
+          "duplicateWorkItemId"
+        ],
+        "title": "IntakeMarkDuplicateIn"
+      },
+      "IntakeOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "projectId": {
+            "type": "string",
+            "title": "Projectid"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "source": {
+            "$ref": "#/components/schemas/IntakeSource"
+          },
+          "sourceRefId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sourcerefid"
+          },
+          "status": {
+            "$ref": "#/components/schemas/IntakeStatus"
+          },
+          "submitterId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Submitterid"
+          },
+          "aiSummary": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Aisummary"
+          },
+          "aiCategory": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Aicategory"
+          },
+          "suggestedType": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/WorkItemType"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "suggestedPriority": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/WorkItemPriority"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "suggestedAssigneeId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Suggestedassigneeid"
+          },
+          "suggestedAssignee": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/UserBriefOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "triageMeta": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Triagemeta"
+          },
+          "duplicateWorkItemId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duplicateworkitemid"
+          },
+          "convertedWorkItemId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Convertedworkitemid"
+          },
+          "snoozeUntil": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Snoozeuntil"
+          },
+          "rejectionReason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rejectionreason"
+          },
+          "createdBy": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Createdby"
+          },
+          "updatedBy": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updatedby"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Createdat"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updatedat"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "projectId",
+          "title",
+          "description",
+          "source",
+          "sourceRefId",
+          "status",
+          "submitterId",
+          "aiSummary",
+          "aiCategory",
+          "suggestedType",
+          "suggestedPriority",
+          "suggestedAssigneeId",
+          "suggestedAssignee",
+          "triageMeta",
+          "duplicateWorkItemId",
+          "convertedWorkItemId",
+          "snoozeUntil",
+          "rejectionReason",
+          "createdBy",
+          "updatedBy",
+          "createdAt",
+          "updatedAt"
+        ],
+        "title": "IntakeOut"
+      },
+      "IntakeRejectIn": {
+        "properties": {
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          }
+        },
+        "type": "object",
+        "title": "IntakeRejectIn"
+      },
+      "IntakeSnoozeIn": {
+        "properties": {
+          "snoozeUntil": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Snoozeuntil"
+          }
+        },
+        "type": "object",
+        "required": [
+          "snoozeUntil"
+        ],
+        "title": "IntakeSnoozeIn"
+      },
+      "IntakeSource": {
+        "type": "string",
+        "enum": [
+          "manual",
+          "ai_chat",
+          "api",
+          "mcp"
+        ],
+        "title": "IntakeSource"
+      },
+      "IntakeStatus": {
+        "type": "string",
+        "enum": [
+          "new",
+          "triaging",
+          "accepted",
+          "rejected",
+          "duplicate",
+          "snoozed",
+          "converted"
+        ],
+        "title": "IntakeStatus"
+      },
+      "IntakeUpdateIn": {
+        "properties": {
+          "title": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 300,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/IntakeStatus"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "title": "IntakeUpdateIn"
+      },
       "InviteCreateIn": {
         "properties": {
           "email": {
@@ -3995,6 +4914,37 @@
           "pageSize"
         ],
         "title": "Page[AgentActionOut]"
+      },
+      "Page_IntakeOut_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/IntakeOut"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "page": {
+            "type": "integer",
+            "title": "Page"
+          },
+          "pageSize": {
+            "type": "integer",
+            "title": "Pagesize"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total",
+          "page",
+          "pageSize"
+        ],
+        "title": "Page[IntakeOut]"
       },
       "Page_InviteOut_": {
         "properties": {

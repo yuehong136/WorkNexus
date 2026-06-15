@@ -25,6 +25,7 @@ import type {
   EnvelopeAgentActionOut,
   EnvelopeCommentOut,
   EnvelopeCurrentUserContext,
+  EnvelopeIntakeOut,
   EnvelopeInviteCreatedOut,
   EnvelopeInviteOut,
   EnvelopeInvitePreviewOut,
@@ -38,6 +39,7 @@ import type {
   EnvelopeMessageOut,
   EnvelopeNoneType,
   EnvelopePageAgentActionOut,
+  EnvelopePageIntakeOut,
   EnvelopePageInviteOut,
   EnvelopePageMessageOut,
   EnvelopePageProjectOut,
@@ -53,8 +55,15 @@ import type {
   EnvelopeWorkItemOut,
   GetHealth200,
   HTTPValidationError,
+  IntakeAcceptIn,
+  IntakeCreateIn,
+  IntakeMarkDuplicateIn,
+  IntakeRejectIn,
+  IntakeSnoozeIn,
+  IntakeUpdateIn,
   InviteCreateIn,
   ListAgentActionsParams,
+  ListIntakeParams,
   ListInvitesParams,
   ListMessagesParams,
   ListProjectsParams,
@@ -3244,6 +3253,760 @@ export const useDeleteWorkItemRelation = <TError = HTTPValidationError,
       > => {
 
       const mutationOptions = getDeleteWorkItemRelationMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+    
+/**
+ * @summary List Intake
+ */
+export type listIntakeResponse200 = {
+  data: EnvelopePageIntakeOut
+  status: 200
+}
+
+export type listIntakeResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+    
+export type listIntakeResponseSuccess = (listIntakeResponse200) & {
+  headers: Headers;
+};
+export type listIntakeResponseError = (listIntakeResponse422) & {
+  headers: Headers;
+};
+
+export type listIntakeResponse = (listIntakeResponseSuccess | listIntakeResponseError)
+
+export const getListIntakeUrl = (projectId: string,
+    params?: ListIntakeParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/v1/projects/${projectId}/intake?${stringifiedParams}` : `/api/v1/projects/${projectId}/intake`
+}
+
+export const listIntake = async (projectId: string,
+    params?: ListIntakeParams, options?: RequestInit): Promise<listIntakeResponse> => {
+  
+  return apiMutator<listIntakeResponse>(getListIntakeUrl(projectId,params),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+
+
+export const getListIntakeQueryKey = (projectId?: string,
+    params?: ListIntakeParams,) => {
+    return [
+    `/api/v1/projects/${projectId}/intake`, ...(params ? [params]: [])
+    ] as const;
+    }
+
+    
+export const getListIntakeQueryOptions = <TData = Awaited<ReturnType<typeof listIntake>>, TError = HTTPValidationError>(projectId: string,
+    params?: ListIntakeParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listIntake>>, TError, TData>, request?: SecondParameter<typeof apiMutator>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListIntakeQueryKey(projectId,params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listIntake>>> = ({ signal }) => listIntake(projectId,params, { signal, ...requestOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(projectId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listIntake>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListIntakeQueryResult = NonNullable<Awaited<ReturnType<typeof listIntake>>>
+export type ListIntakeQueryError = HTTPValidationError
+
+
+/**
+ * @summary List Intake
+ */
+
+export function useListIntake<TData = Awaited<ReturnType<typeof listIntake>>, TError = HTTPValidationError>(
+ projectId: string,
+    params?: ListIntakeParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listIntake>>, TError, TData>, request?: SecondParameter<typeof apiMutator>}
+  
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListIntakeQueryOptions(projectId,params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * @summary Create Intake
+ */
+export type createIntakeResponse200 = {
+  data: EnvelopeIntakeOut
+  status: 200
+}
+
+export type createIntakeResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+    
+export type createIntakeResponseSuccess = (createIntakeResponse200) & {
+  headers: Headers;
+};
+export type createIntakeResponseError = (createIntakeResponse422) & {
+  headers: Headers;
+};
+
+export type createIntakeResponse = (createIntakeResponseSuccess | createIntakeResponseError)
+
+export const getCreateIntakeUrl = (projectId: string,) => {
+
+
+  
+
+  return `/api/v1/projects/${projectId}/intake`
+}
+
+export const createIntake = async (projectId: string,
+    intakeCreateIn: IntakeCreateIn, options?: RequestInit): Promise<createIntakeResponse> => {
+  
+  return apiMutator<createIntakeResponse>(getCreateIntakeUrl(projectId),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      intakeCreateIn,)
+  }
+);}
+
+
+
+
+export const getCreateIntakeMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createIntake>>, TError,{projectId: string;data: IntakeCreateIn}, TContext>, request?: SecondParameter<typeof apiMutator>}
+): UseMutationOptions<Awaited<ReturnType<typeof createIntake>>, TError,{projectId: string;data: IntakeCreateIn}, TContext> => {
+
+const mutationKey = ['createIntake'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createIntake>>, {projectId: string;data: IntakeCreateIn}> = (props) => {
+          const {projectId,data} = props ?? {};
+
+          return  createIntake(projectId,data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateIntakeMutationResult = NonNullable<Awaited<ReturnType<typeof createIntake>>>
+    export type CreateIntakeMutationBody = IntakeCreateIn
+    export type CreateIntakeMutationError = HTTPValidationError
+
+    /**
+ * @summary Create Intake
+ */
+export const useCreateIntake = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createIntake>>, TError,{projectId: string;data: IntakeCreateIn}, TContext>, request?: SecondParameter<typeof apiMutator>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createIntake>>,
+        TError,
+        {projectId: string;data: IntakeCreateIn},
+        TContext
+      > => {
+
+      const mutationOptions = getCreateIntakeMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+    
+/**
+ * @summary Get Intake
+ */
+export type getIntakeResponse200 = {
+  data: EnvelopeIntakeOut
+  status: 200
+}
+
+export type getIntakeResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+    
+export type getIntakeResponseSuccess = (getIntakeResponse200) & {
+  headers: Headers;
+};
+export type getIntakeResponseError = (getIntakeResponse422) & {
+  headers: Headers;
+};
+
+export type getIntakeResponse = (getIntakeResponseSuccess | getIntakeResponseError)
+
+export const getGetIntakeUrl = (intakeId: string,) => {
+
+
+  
+
+  return `/api/v1/intake/${intakeId}`
+}
+
+export const getIntake = async (intakeId: string, options?: RequestInit): Promise<getIntakeResponse> => {
+  
+  return apiMutator<getIntakeResponse>(getGetIntakeUrl(intakeId),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+
+
+export const getGetIntakeQueryKey = (intakeId?: string,) => {
+    return [
+    `/api/v1/intake/${intakeId}`
+    ] as const;
+    }
+
+    
+export const getGetIntakeQueryOptions = <TData = Awaited<ReturnType<typeof getIntake>>, TError = HTTPValidationError>(intakeId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getIntake>>, TError, TData>, request?: SecondParameter<typeof apiMutator>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetIntakeQueryKey(intakeId);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getIntake>>> = ({ signal }) => getIntake(intakeId, { signal, ...requestOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(intakeId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getIntake>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetIntakeQueryResult = NonNullable<Awaited<ReturnType<typeof getIntake>>>
+export type GetIntakeQueryError = HTTPValidationError
+
+
+/**
+ * @summary Get Intake
+ */
+
+export function useGetIntake<TData = Awaited<ReturnType<typeof getIntake>>, TError = HTTPValidationError>(
+ intakeId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getIntake>>, TError, TData>, request?: SecondParameter<typeof apiMutator>}
+  
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetIntakeQueryOptions(intakeId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * @summary Update Intake
+ */
+export type updateIntakeResponse200 = {
+  data: EnvelopeIntakeOut
+  status: 200
+}
+
+export type updateIntakeResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+    
+export type updateIntakeResponseSuccess = (updateIntakeResponse200) & {
+  headers: Headers;
+};
+export type updateIntakeResponseError = (updateIntakeResponse422) & {
+  headers: Headers;
+};
+
+export type updateIntakeResponse = (updateIntakeResponseSuccess | updateIntakeResponseError)
+
+export const getUpdateIntakeUrl = (intakeId: string,) => {
+
+
+  
+
+  return `/api/v1/intake/${intakeId}`
+}
+
+export const updateIntake = async (intakeId: string,
+    intakeUpdateIn: IntakeUpdateIn, options?: RequestInit): Promise<updateIntakeResponse> => {
+  
+  return apiMutator<updateIntakeResponse>(getUpdateIntakeUrl(intakeId),
+  {      
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      intakeUpdateIn,)
+  }
+);}
+
+
+
+
+export const getUpdateIntakeMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateIntake>>, TError,{intakeId: string;data: IntakeUpdateIn}, TContext>, request?: SecondParameter<typeof apiMutator>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateIntake>>, TError,{intakeId: string;data: IntakeUpdateIn}, TContext> => {
+
+const mutationKey = ['updateIntake'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateIntake>>, {intakeId: string;data: IntakeUpdateIn}> = (props) => {
+          const {intakeId,data} = props ?? {};
+
+          return  updateIntake(intakeId,data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateIntakeMutationResult = NonNullable<Awaited<ReturnType<typeof updateIntake>>>
+    export type UpdateIntakeMutationBody = IntakeUpdateIn
+    export type UpdateIntakeMutationError = HTTPValidationError
+
+    /**
+ * @summary Update Intake
+ */
+export const useUpdateIntake = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateIntake>>, TError,{intakeId: string;data: IntakeUpdateIn}, TContext>, request?: SecondParameter<typeof apiMutator>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateIntake>>,
+        TError,
+        {intakeId: string;data: IntakeUpdateIn},
+        TContext
+      > => {
+
+      const mutationOptions = getUpdateIntakeMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+    
+/**
+ * @summary Accept Intake
+ */
+export type acceptIntakeResponse200 = {
+  data: EnvelopeIntakeOut
+  status: 200
+}
+
+export type acceptIntakeResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+    
+export type acceptIntakeResponseSuccess = (acceptIntakeResponse200) & {
+  headers: Headers;
+};
+export type acceptIntakeResponseError = (acceptIntakeResponse422) & {
+  headers: Headers;
+};
+
+export type acceptIntakeResponse = (acceptIntakeResponseSuccess | acceptIntakeResponseError)
+
+export const getAcceptIntakeUrl = (intakeId: string,) => {
+
+
+  
+
+  return `/api/v1/intake/${intakeId}/accept`
+}
+
+export const acceptIntake = async (intakeId: string,
+    intakeAcceptIn: IntakeAcceptIn, options?: RequestInit): Promise<acceptIntakeResponse> => {
+  
+  return apiMutator<acceptIntakeResponse>(getAcceptIntakeUrl(intakeId),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      intakeAcceptIn,)
+  }
+);}
+
+
+
+
+export const getAcceptIntakeMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof acceptIntake>>, TError,{intakeId: string;data: IntakeAcceptIn}, TContext>, request?: SecondParameter<typeof apiMutator>}
+): UseMutationOptions<Awaited<ReturnType<typeof acceptIntake>>, TError,{intakeId: string;data: IntakeAcceptIn}, TContext> => {
+
+const mutationKey = ['acceptIntake'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof acceptIntake>>, {intakeId: string;data: IntakeAcceptIn}> = (props) => {
+          const {intakeId,data} = props ?? {};
+
+          return  acceptIntake(intakeId,data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AcceptIntakeMutationResult = NonNullable<Awaited<ReturnType<typeof acceptIntake>>>
+    export type AcceptIntakeMutationBody = IntakeAcceptIn
+    export type AcceptIntakeMutationError = HTTPValidationError
+
+    /**
+ * @summary Accept Intake
+ */
+export const useAcceptIntake = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof acceptIntake>>, TError,{intakeId: string;data: IntakeAcceptIn}, TContext>, request?: SecondParameter<typeof apiMutator>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof acceptIntake>>,
+        TError,
+        {intakeId: string;data: IntakeAcceptIn},
+        TContext
+      > => {
+
+      const mutationOptions = getAcceptIntakeMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+    
+/**
+ * @summary Reject Intake
+ */
+export type rejectIntakeResponse200 = {
+  data: EnvelopeIntakeOut
+  status: 200
+}
+
+export type rejectIntakeResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+    
+export type rejectIntakeResponseSuccess = (rejectIntakeResponse200) & {
+  headers: Headers;
+};
+export type rejectIntakeResponseError = (rejectIntakeResponse422) & {
+  headers: Headers;
+};
+
+export type rejectIntakeResponse = (rejectIntakeResponseSuccess | rejectIntakeResponseError)
+
+export const getRejectIntakeUrl = (intakeId: string,) => {
+
+
+  
+
+  return `/api/v1/intake/${intakeId}/reject`
+}
+
+export const rejectIntake = async (intakeId: string,
+    intakeRejectIn: IntakeRejectIn, options?: RequestInit): Promise<rejectIntakeResponse> => {
+  
+  return apiMutator<rejectIntakeResponse>(getRejectIntakeUrl(intakeId),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      intakeRejectIn,)
+  }
+);}
+
+
+
+
+export const getRejectIntakeMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof rejectIntake>>, TError,{intakeId: string;data: IntakeRejectIn}, TContext>, request?: SecondParameter<typeof apiMutator>}
+): UseMutationOptions<Awaited<ReturnType<typeof rejectIntake>>, TError,{intakeId: string;data: IntakeRejectIn}, TContext> => {
+
+const mutationKey = ['rejectIntake'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof rejectIntake>>, {intakeId: string;data: IntakeRejectIn}> = (props) => {
+          const {intakeId,data} = props ?? {};
+
+          return  rejectIntake(intakeId,data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RejectIntakeMutationResult = NonNullable<Awaited<ReturnType<typeof rejectIntake>>>
+    export type RejectIntakeMutationBody = IntakeRejectIn
+    export type RejectIntakeMutationError = HTTPValidationError
+
+    /**
+ * @summary Reject Intake
+ */
+export const useRejectIntake = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof rejectIntake>>, TError,{intakeId: string;data: IntakeRejectIn}, TContext>, request?: SecondParameter<typeof apiMutator>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof rejectIntake>>,
+        TError,
+        {intakeId: string;data: IntakeRejectIn},
+        TContext
+      > => {
+
+      const mutationOptions = getRejectIntakeMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+    
+/**
+ * @summary Mark Intake Duplicate
+ */
+export type markIntakeDuplicateResponse200 = {
+  data: EnvelopeIntakeOut
+  status: 200
+}
+
+export type markIntakeDuplicateResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+    
+export type markIntakeDuplicateResponseSuccess = (markIntakeDuplicateResponse200) & {
+  headers: Headers;
+};
+export type markIntakeDuplicateResponseError = (markIntakeDuplicateResponse422) & {
+  headers: Headers;
+};
+
+export type markIntakeDuplicateResponse = (markIntakeDuplicateResponseSuccess | markIntakeDuplicateResponseError)
+
+export const getMarkIntakeDuplicateUrl = (intakeId: string,) => {
+
+
+  
+
+  return `/api/v1/intake/${intakeId}/mark-duplicate`
+}
+
+export const markIntakeDuplicate = async (intakeId: string,
+    intakeMarkDuplicateIn: IntakeMarkDuplicateIn, options?: RequestInit): Promise<markIntakeDuplicateResponse> => {
+  
+  return apiMutator<markIntakeDuplicateResponse>(getMarkIntakeDuplicateUrl(intakeId),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      intakeMarkDuplicateIn,)
+  }
+);}
+
+
+
+
+export const getMarkIntakeDuplicateMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof markIntakeDuplicate>>, TError,{intakeId: string;data: IntakeMarkDuplicateIn}, TContext>, request?: SecondParameter<typeof apiMutator>}
+): UseMutationOptions<Awaited<ReturnType<typeof markIntakeDuplicate>>, TError,{intakeId: string;data: IntakeMarkDuplicateIn}, TContext> => {
+
+const mutationKey = ['markIntakeDuplicate'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof markIntakeDuplicate>>, {intakeId: string;data: IntakeMarkDuplicateIn}> = (props) => {
+          const {intakeId,data} = props ?? {};
+
+          return  markIntakeDuplicate(intakeId,data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type MarkIntakeDuplicateMutationResult = NonNullable<Awaited<ReturnType<typeof markIntakeDuplicate>>>
+    export type MarkIntakeDuplicateMutationBody = IntakeMarkDuplicateIn
+    export type MarkIntakeDuplicateMutationError = HTTPValidationError
+
+    /**
+ * @summary Mark Intake Duplicate
+ */
+export const useMarkIntakeDuplicate = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof markIntakeDuplicate>>, TError,{intakeId: string;data: IntakeMarkDuplicateIn}, TContext>, request?: SecondParameter<typeof apiMutator>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof markIntakeDuplicate>>,
+        TError,
+        {intakeId: string;data: IntakeMarkDuplicateIn},
+        TContext
+      > => {
+
+      const mutationOptions = getMarkIntakeDuplicateMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+    
+/**
+ * @summary Snooze Intake
+ */
+export type snoozeIntakeResponse200 = {
+  data: EnvelopeIntakeOut
+  status: 200
+}
+
+export type snoozeIntakeResponse422 = {
+  data: HTTPValidationError
+  status: 422
+}
+    
+export type snoozeIntakeResponseSuccess = (snoozeIntakeResponse200) & {
+  headers: Headers;
+};
+export type snoozeIntakeResponseError = (snoozeIntakeResponse422) & {
+  headers: Headers;
+};
+
+export type snoozeIntakeResponse = (snoozeIntakeResponseSuccess | snoozeIntakeResponseError)
+
+export const getSnoozeIntakeUrl = (intakeId: string,) => {
+
+
+  
+
+  return `/api/v1/intake/${intakeId}/snooze`
+}
+
+export const snoozeIntake = async (intakeId: string,
+    intakeSnoozeIn: IntakeSnoozeIn, options?: RequestInit): Promise<snoozeIntakeResponse> => {
+  
+  return apiMutator<snoozeIntakeResponse>(getSnoozeIntakeUrl(intakeId),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      intakeSnoozeIn,)
+  }
+);}
+
+
+
+
+export const getSnoozeIntakeMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof snoozeIntake>>, TError,{intakeId: string;data: IntakeSnoozeIn}, TContext>, request?: SecondParameter<typeof apiMutator>}
+): UseMutationOptions<Awaited<ReturnType<typeof snoozeIntake>>, TError,{intakeId: string;data: IntakeSnoozeIn}, TContext> => {
+
+const mutationKey = ['snoozeIntake'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof snoozeIntake>>, {intakeId: string;data: IntakeSnoozeIn}> = (props) => {
+          const {intakeId,data} = props ?? {};
+
+          return  snoozeIntake(intakeId,data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SnoozeIntakeMutationResult = NonNullable<Awaited<ReturnType<typeof snoozeIntake>>>
+    export type SnoozeIntakeMutationBody = IntakeSnoozeIn
+    export type SnoozeIntakeMutationError = HTTPValidationError
+
+    /**
+ * @summary Snooze Intake
+ */
+export const useSnoozeIntake = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof snoozeIntake>>, TError,{intakeId: string;data: IntakeSnoozeIn}, TContext>, request?: SecondParameter<typeof apiMutator>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof snoozeIntake>>,
+        TError,
+        {intakeId: string;data: IntakeSnoozeIn},
+        TContext
+      > => {
+
+      const mutationOptions = getSnoozeIntakeMutationOptions(options);
 
       return useMutation(mutationOptions);
     }
