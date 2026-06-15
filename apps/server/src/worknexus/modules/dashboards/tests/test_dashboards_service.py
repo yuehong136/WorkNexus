@@ -70,3 +70,20 @@ async def test_insights_carry_provenance(db: AsyncSession, initialized: SimpleNa
     # the seeded overdue + urgent item triggers overdue + high_priority + risk signals
     kinds = {i.kind for i in out.insights}
     assert "overdue" in kinds
+
+
+async def test_snapshot_bundles_and_caps_overdue(db: AsyncSession, initialized: SimpleNamespace) -> None:
+    actor, pid = _actor(initialized), initialized.project.id
+    past = datetime.now(UTC) - timedelta(days=3)
+    for i in range(3):
+        await work_items_service.create_work_item(
+            db, actor, pid, WorkItemCreateIn(type=WorkItemType.TASK, title=f"late-{i}", due_at=past)
+        )
+
+    snapshot = await service.get_project_dashboard_snapshot(db, actor, pid, overdue_limit=2)
+
+    assert snapshot.summary.total_count == 3
+    assert snapshot.overdue_count == 3  # full count
+    assert len(snapshot.overdue_preview) == 2  # capped by overdue_limit
+    assert snapshot.insights.provenance.provider == "rules"
+    assert snapshot.workload  # at least the unassigned bucket

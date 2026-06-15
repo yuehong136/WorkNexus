@@ -93,3 +93,14 @@ class InsightProvenance(ApiModel):
 class DashboardInsightsOut(ApiModel):
     insights: list[InsightOut]
     provenance: InsightProvenance
+
+
+class DashboardSnapshotOut(ApiModel):
+    """Single read-only bundle for the MCP `get_project_dashboard` tool (lets AI read project
+    state in WorkChat). Overdue is a capped preview here; the REST endpoint is the paged list."""
+
+    summary: DashboardSummaryOut
+    workload: list[WorkloadItemOut]
+    overdue_count: int
+    overdue_preview: list[DashboardOverdueItemOut]
+    insights: DashboardInsightsOut
