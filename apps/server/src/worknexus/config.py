@@ -20,6 +20,10 @@ class Settings(BaseSettings):
     ai_client: str = "multirag"
     ai_platform_timeout_seconds: float = 60.0
 
+    # Intake triage provider (decision A). v0.1 only "rules" (deterministic, no external dep);
+    # a "multirag" provider slots in after the AI endpoint is live-verified.
+    intake_triage_provider: str = "rules"
+
     mcp_auth_token: str = "change-me-mcp-token"
 
     cors_origins: list[str] = ["http://localhost:5173"]

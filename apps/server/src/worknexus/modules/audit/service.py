@@ -35,6 +35,12 @@ class AuditAction(StrEnum):
     AGENT_ACTION_APPROVE = "agent_action.approve"
     AGENT_ACTION_REJECT = "agent_action.reject"
     AGENT_ACTION_EXECUTE = "agent_action.execute"
+    INTAKE_CREATE = "intake.create"
+    INTAKE_UPDATE = "intake.update"
+    INTAKE_ACCEPT = "intake.accept"
+    INTAKE_REJECT = "intake.reject"
+    INTAKE_MARK_DUPLICATE = "intake.duplicate"
+    INTAKE_SNOOZE = "intake.snooze"
 
 
 async def record(

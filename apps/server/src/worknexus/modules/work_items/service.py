@@ -227,7 +227,7 @@ async def get_work_item_detail(db: AsyncSession, actor: Actor, work_item_id: str
     return (await _build_work_item_outs(db, [item]))[0]
 
 
-async def create_work_item(
+async def create_work_item_in_tx(
     db: AsyncSession,
     actor: Actor,
     project_id: str,
@@ -236,7 +236,11 @@ async def create_work_item(
     source: WorkItemSource = WorkItemSource.MANUAL,
     source_ref_id: str | None = None,
     reporter_id: str | None = None,
-) -> WorkItemOut:
+) -> WorkItem:
+    """Create a work item (flush + activity + audit) WITHOUT committing, so callers that
+    must combine it with their own writes in a single transaction can do so — e.g. intake
+    accept-and-convert (`intake.service.accept_intake_request`). `create_work_item` is the
+    committing public wrapper."""
     project = await ensure_project_writable(db, project_id, actor.tenant_id)
     custom_fields = validate_custom_fields(data.type, data.custom_fields)
     if data.assignee_id is not None:
@@ -274,6 +278,22 @@ async def create_work_item(
         resource_id=item.id,
         project_id=project_id,
         after={"key": item.key, "type": item.type, "title": item.title, "source": item.source},
+    )
+    return item
+
+
+async def create_work_item(
+    db: AsyncSession,
+    actor: Actor,
+    project_id: str,
+    data: WorkItemCreateIn,
+    *,
+    source: WorkItemSource = WorkItemSource.MANUAL,
+    source_ref_id: str | None = None,
+    reporter_id: str | None = None,
+) -> WorkItemOut:
+    item = await create_work_item_in_tx(
+        db, actor, project_id, data, source=source, source_ref_id=source_ref_id, reporter_id=reporter_id
     )
     await db.commit()
     return (await _build_work_item_outs(db, [item]))[0]
