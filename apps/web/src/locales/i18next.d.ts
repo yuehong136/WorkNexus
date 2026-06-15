@@ -1,3 +1,4 @@
+import type audit from './zh-CN/audit'
 import type auth from './zh-CN/auth'
 import type common from './zh-CN/common'
 import type dashboard from './zh-CN/dashboard'
@@ -21,6 +22,7 @@ declare module 'i18next' {
       dashboard: typeof dashboard
       skills: typeof skills
       workchat: typeof workchat
+      audit: typeof audit
     }
   }
 }
