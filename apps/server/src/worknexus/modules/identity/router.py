@@ -18,6 +18,7 @@ from worknexus.modules.identity.schemas import (
     InviteOut,
     InvitePreviewOut,
     LoginIn,
+    ProfileUpdateIn,
     SetupIn,
     SetupStatusOut,
     UserListOut,
@@ -101,6 +102,15 @@ async def get_me(
 ) -> Envelope[CurrentUserContext]:
     user = await service.get_user(db, actor.id)
     return Envelope(data=await service.build_current_user_context(db, user))
+
+
+@router.patch("/me", operation_id="update_me")
+async def update_me(
+    payload: ProfileUpdateIn,
+    actor: Annotated[Actor, Depends(get_current_actor)],
+    db: Annotated[AsyncSession, Depends(get_db)],
+) -> Envelope[CurrentUserContext]:
+    return Envelope(data=await service.update_profile(db, actor, payload))
 
 
 @router.get("/users", operation_id="list_users")

@@ -51,6 +51,7 @@ class AuditAction(StrEnum):
     INTAKE_REJECT = "intake.reject"
     INTAKE_MARK_DUPLICATE = "intake.duplicate"
     INTAKE_SNOOZE = "intake.snooze"
+    USER_PROFILE_UPDATE = "user.profile.update"
 
 
 async def record(
