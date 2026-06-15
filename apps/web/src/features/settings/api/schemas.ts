@@ -18,3 +18,11 @@ export function inviteSchema(t: AppTFunction) {
 }
 
 export type InviteFormValues = z.infer<ReturnType<typeof inviteSchema>>
+
+export function profileSchema(t: AppTFunction) {
+  return z.object({
+    displayName: z.string().trim().min(1, t('settings:profile.displayNameRequired')).max(100),
+  })
+}
+
+export type ProfileFormValues = z.infer<ReturnType<typeof profileSchema>>
