@@ -1,5 +1,6 @@
 from fastapi import APIRouter
 
+from worknexus.modules.audit.router import router as audit_router
 from worknexus.modules.dashboards.router import router as dashboards_router
 from worknexus.modules.identity.router import router as identity_router
 from worknexus.modules.intake.router import router as intake_router
@@ -18,3 +19,4 @@ api_router.include_router(intake_router)
 api_router.include_router(dashboards_router)
 api_router.include_router(skills_router)
 api_router.include_router(workchat_router)
+api_router.include_router(audit_router)
