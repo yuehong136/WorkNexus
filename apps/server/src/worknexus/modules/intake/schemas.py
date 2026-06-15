@@ -2,7 +2,7 @@ from datetime import datetime
 from enum import StrEnum
 from typing import Any
 
-from pydantic import Field
+from pydantic import BaseModel, Field
 
 from worknexus.core.schemas import ApiModel
 from worknexus.modules.projects.schemas import UserBriefOut
@@ -14,6 +14,7 @@ __all__ = [
     "IntakeAcceptIn",
     "IntakeCreateIn",
     "IntakeMarkDuplicateIn",
+    "IntakeMetrics",
     "IntakeOut",
     "IntakeRejectIn",
     "IntakeSnoozeIn",
@@ -105,3 +106,14 @@ class IntakeOut(ApiModel):
     updated_by: str | None
     created_at: datetime
     updated_at: datetime
+
+
+class IntakeMetrics(BaseModel):
+    """M7 dashboard domain read-model (owned by intake; the dashboards module orchestrates
+    it without importing intake models). `status_counts` follows the read-time semantics:
+    an expired snooze is virtually reclassified to `new` (matches `_maybe_unsnooze`)."""
+
+    request_count: int
+    status_counts: dict[str, int]
+    converted_count: int
+    conversion_rate: float  # converted / request_count, 0.0 when no requests

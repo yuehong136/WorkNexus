@@ -93,8 +93,10 @@ DashboardOverdueItemOut { id, key, title, status, type, priority, assigneeId,
 # 排序：due_at asc → priority(urgent>high>medium>low) → created_at desc
 # daysOverdue 后端按 UTC aware now 算，前端只展示不自行推导
 
-InsightOut            { kind: InsightKind, severity: InsightSeverity, title: str,
-                        detail: str, metrics: dict }
+InsightOut            { kind: InsightKind, severity: InsightSeverity, metrics: dict,
+                        detail: str | None }
+# 规则版返回结构化信号（kind + severity + metrics），detail 留空；前端按 kind 用 i18n
+# 模板插值 metrics 渲染双语 title/detail。detail 是 multirag 后置 provider 填充自由 prose 的槽。
 InsightProvenance     { provider: str, version: str, generatedAt: datetime }
 DashboardInsightsOut  { insights: list[InsightOut], provenance: InsightProvenance }
 ```
@@ -192,4 +194,5 @@ i18n namespace：`dashboard`（zh-CN / en-US 同步提供，四步注册：`loca
 
 | 日期 | PR | 变更摘要 |
 | --- | --- | --- |
+| 2026-06-15 | PR2（后端核心） | 领域 metrics read-model（`work_items.service.get_project_work_item_metrics`〔status/type/priority/source 分布 zero-filled + high_priority/overdue/ai_created 计数 + 近 7 天 created〔created_at〕/completed〔status_changed→done 活动〕UTC 趋势〕、`list_project_overdue_work_items`〔分页·排序 due_at asc→priority→created_at desc·后端算 days_overdue〕、`get_project_workload_metrics`〔按 assignee 分组含未分配桶〕；`intake.service.get_project_intake_metrics`〔status_counts 含过期 snooze 虚拟回 new、converted、conversion_rate〕）；**M3 `get_project_summary` 重构复用 `get_project_work_item_metrics`**（口径单一真相源，既有契约/测试不变）；dashboards 模块（schemas ApiModel DTO + InsightKind/Severity 枚举；`insights.py` 规则版 `InsightsEngine` Protocol〔provider/version〕+ `RuleBasedInsightsEngine`〔overdue/high_priority/risk/workload 阈值确定性信号·结构化 kind+severity+metrics·detail 留空待 multirag·前端 i18n 渲染〕+ `get_insights_engine`；service 编排四 DTO·不 import 他模块 models；router 四 GET 端点 `require_permission(DASHBOARD_READ, project_param)`）；config `dashboard_insights_provider` + .env.example；api 注册 dashboards_router。无新表/无迁移（`alembic check` 干净）。测试 +20（work_items metrics 4·intake metrics 2·insights 7·dashboards service 3·REST 4〔owner 四端点冒烟 + 401 + 5002 + 非成员 403 + viewer 可读〕）；全套 224 passed，ruff/mypy 全绿 |
 | 2026-06-15 | PR1（设计） | 初版设计：与用户敲定 A–H（A 规则版可替换 `InsightsEngine` 复刻 M6 TriageEngine·按需算不缓存·time-free·带 provenance·D6 天然满足；B 领域 metrics read-model 归各自模块、dashboards 只编排不 import 他模块 models、M3 get_project_summary 重构复用同口径、aiCreatedCount 沿用 ai_chat+mcp 另加 sourceCounts、完成趋势取自 status_changed→done 活动；C summary/workload/overdue 分页/ai-insights 字段契约；D 仅项目级；E read MCP 工具作独立 PR③；F 前端图表封装先补 §5.5 手册、CSS 变量取色、入口按钮；G 无新错误码·读不审计·复用 dashboard.read；H 无新表/无迁移仅加 config flag）；四端点 schema 定型；5 个 PR 拆分（① 设计 ② 后端 ④ contracts ⑤ 前端，③ MCP 独立）；同步 roadmap M7 进度 |

@@ -283,3 +283,51 @@ class ProjectSummaryOut(ApiModel):
     overdue_count: int
     ai_created_count: int
     recent_activities: list[ProjectActivityOut]
+
+
+# --- M7 dashboard domain read-models (owned by work_items; dashboards orchestrates them
+#     without importing this module's models — see docs/modules/dashboard.md decision B) ---
+
+
+class DailyCount(BaseModel):
+    """One day of a 7-day trend (UTC date, ISO `YYYY-MM-DD`)."""
+
+    date: str
+    count: int
+
+
+class WorkItemMetrics(BaseModel):
+    total_count: int
+    status_counts: dict[str, int]
+    type_counts: dict[str, int]
+    priority_counts: dict[str, int]
+    source_counts: dict[str, int]
+    high_priority_count: int  # priority in (high, urgent)
+    overdue_count: int  # due_at < now and status not in (done, cancelled)
+    ai_created_count: int  # source in (ai_chat, mcp) — matches M3 get_project_summary
+    created_trend: list[DailyCount]  # by created_at, last 7 UTC days
+    completed_trend: list[DailyCount]  # by status_changed->done activity time, last 7 UTC days
+
+
+class OverdueWorkItem(BaseModel):
+    id: str
+    key: str
+    title: str
+    status: WorkItemStatus
+    type: WorkItemType
+    priority: WorkItemPriority
+    assignee_id: str | None
+    assignee: UserBriefOut | None
+    due_at: datetime
+    days_overdue: int  # backend-computed, floor of (UTC now - due_at) in days
+    source: WorkItemSource
+    created_at: datetime
+
+
+class WorkloadBucket(BaseModel):
+    assignee_id: str | None  # None = unassigned bucket
+    assignee: UserBriefOut | None
+    total_count: int
+    status_counts: dict[str, int]
+    overdue_count: int
+    high_priority_count: int
