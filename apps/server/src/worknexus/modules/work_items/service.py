@@ -956,8 +956,11 @@ async def list_assigned_open_work_items(
 
 async def list_my_overdue_work_items(
     db: AsyncSession, actor: Actor, *, project_ids: set[str] | None, limit: int
-) -> tuple[list[OverdueWorkItem], int]:
-    """The caller's overdue work across projects (assignee=actor, due_at past, still open)."""
+) -> tuple[list[WorkItemOut], int]:
+    """The caller's overdue work across projects (assignee=actor, due_at past, still open).
+
+    Returns WorkItemOut (camelCase ApiModel, carries projectId for deep-linking) rather than
+    the dashboard's internal OverdueWorkItem — these items are all overdue by construction."""
     if project_ids is not None and not project_ids:
         return [], 0
     now = _now()
@@ -981,7 +984,7 @@ async def list_my_overdue_work_items(
         .scalars()
         .all()
     )
-    return await _build_overdue_outs(db, list(items), now), total
+    return await _build_work_item_outs(db, list(items)), total
 
 
 async def list_recent_ai_created_work_items(
