@@ -54,11 +54,11 @@ async def get_project(db: AsyncSession, project_id: str, tenant_id: str) -> Proj
     return project
 
 
-def _accessible_project_ids(subject: Subject) -> set[str] | None:
+def accessible_project_ids(subject: Subject) -> set[str] | None:
     """The project ids a subject may read. None means "all projects in the tenant"
     (owner/admin tenant roles); otherwise the explicit project-membership set.
 
-    Mirrors identity.service.build_current_user_context so /projects and /me agree."""
+    Mirrors identity.service.build_current_user_context so /projects, /me and /home agree."""
     if subject.tenant_roles:
         return None
     return set(subject.project_roles.keys())
@@ -101,7 +101,7 @@ async def list_projects(
     db: AsyncSession, subject: Subject, *, status: ProjectStatus, params: PageParams
 ) -> tuple[list[ProjectOut], int]:
     base = select(Project).where(Project.tenant_id == subject.actor.tenant_id, Project.status == status)
-    ids = _accessible_project_ids(subject)
+    ids = accessible_project_ids(subject)
     if ids is not None:
         if not ids:
             return [], 0

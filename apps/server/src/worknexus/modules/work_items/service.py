@@ -773,6 +773,34 @@ async def get_project_work_item_metrics(db: AsyncSession, actor: Actor, project_
     )
 
 
+async def _build_overdue_outs(db: AsyncSession, items: list[WorkItem], now: datetime) -> list[OverdueWorkItem]:
+    """Shared overdue projection (single source for days_overdue). Items must already be
+    filtered to overdue work items (due_at not null); the guard narrows the optional."""
+    users = await _users_by_ids(db, {i.assignee_id for i in items if i.assignee_id})
+    rows: list[OverdueWorkItem] = []
+    for i in items:
+        if i.due_at is None:
+            continue
+        due = _aware(i.due_at)
+        rows.append(
+            OverdueWorkItem(
+                id=i.id,
+                key=i.key,
+                title=i.title,
+                status=WorkItemStatus(i.status),
+                type=WorkItemType(i.type),
+                priority=WorkItemPriority(i.priority),
+                assignee_id=i.assignee_id,
+                assignee=UserBriefOut.model_validate(users[i.assignee_id]) if i.assignee_id in users else None,
+                due_at=due,
+                days_overdue=max(0, (now - due).days),
+                source=WorkItemSource(i.source),
+                created_at=i.created_at,
+            )
+        )
+    return rows
+
+
 async def list_project_overdue_work_items(
     db: AsyncSession, actor: Actor, project_id: str, params: PageParams
 ) -> tuple[list[OverdueWorkItem], int]:
@@ -798,29 +826,7 @@ async def list_project_overdue_work_items(
         .scalars()
         .all()
     )
-    users = await _users_by_ids(db, {i.assignee_id for i in items if i.assignee_id})
-    rows: list[OverdueWorkItem] = []
-    for i in items:
-        if i.due_at is None:  # guaranteed by the query; narrows the optional for the type checker
-            continue
-        due = _aware(i.due_at)
-        rows.append(
-            OverdueWorkItem(
-                id=i.id,
-                key=i.key,
-                title=i.title,
-                status=WorkItemStatus(i.status),
-                type=WorkItemType(i.type),
-                priority=WorkItemPriority(i.priority),
-                assignee_id=i.assignee_id,
-                assignee=UserBriefOut.model_validate(users[i.assignee_id]) if i.assignee_id in users else None,
-                due_at=due,
-                days_overdue=max(0, (now - due).days),
-                source=WorkItemSource(i.source),
-                created_at=i.created_at,
-            )
-        )
-    return rows, total
+    return await _build_overdue_outs(db, list(items), now), total
 
 
 async def get_project_workload_metrics(db: AsyncSession, actor: Actor, project_id: str) -> list[WorkloadBucket]:
@@ -913,3 +919,85 @@ async def get_project_summary(db: AsyncSession, actor: Actor, project_id: str) -
         ai_created_count=metrics.ai_created_count,
         recent_activities=recent,
     )
+
+
+# --- cross-project read-models for the Home workbench (M8) ------------------------
+# project_ids=None means all tenant projects (owner/admin); an empty set means no access.
+
+
+async def list_assigned_open_work_items(
+    db: AsyncSession, actor: Actor, *, project_ids: set[str] | None, limit: int
+) -> tuple[list[WorkItemOut], int]:
+    """The caller's open work across projects (assignee=actor, non-terminal status)."""
+    if project_ids is not None and not project_ids:
+        return [], 0
+    base = select(WorkItem).where(
+        WorkItem.tenant_id == actor.tenant_id,
+        WorkItem.deleted_at.is_(None),
+        WorkItem.assignee_id == actor.id,
+        WorkItem.status.in_(_OPEN_STATUSES),
+    )
+    if project_ids is not None:
+        base = base.where(WorkItem.project_id.in_(project_ids))
+    total = (await db.execute(select(func.count()).select_from(base.subquery()))).scalar_one()
+    items = (
+        (
+            await db.execute(
+                base.order_by(
+                    _PRIORITY_RANK.asc(), WorkItem.due_at.asc().nulls_last(), WorkItem.created_at.desc()
+                ).limit(limit)
+            )
+        )
+        .scalars()
+        .all()
+    )
+    return await _build_work_item_outs(db, list(items)), total
+
+
+async def list_my_overdue_work_items(
+    db: AsyncSession, actor: Actor, *, project_ids: set[str] | None, limit: int
+) -> tuple[list[OverdueWorkItem], int]:
+    """The caller's overdue work across projects (assignee=actor, due_at past, still open)."""
+    if project_ids is not None and not project_ids:
+        return [], 0
+    now = _now()
+    base = select(WorkItem).where(
+        WorkItem.tenant_id == actor.tenant_id,
+        WorkItem.deleted_at.is_(None),
+        WorkItem.assignee_id == actor.id,
+        WorkItem.due_at.is_not(None),
+        WorkItem.due_at < now,
+        WorkItem.status.in_(_OPEN_STATUSES),
+    )
+    if project_ids is not None:
+        base = base.where(WorkItem.project_id.in_(project_ids))
+    total = (await db.execute(select(func.count()).select_from(base.subquery()))).scalar_one()
+    items = (
+        (
+            await db.execute(
+                base.order_by(WorkItem.due_at.asc(), _PRIORITY_RANK.asc(), WorkItem.created_at.desc()).limit(limit)
+            )
+        )
+        .scalars()
+        .all()
+    )
+    return await _build_overdue_outs(db, list(items), now), total
+
+
+async def list_recent_ai_created_work_items(
+    db: AsyncSession, actor: Actor, *, project_ids: set[str] | None, limit: int
+) -> tuple[list[WorkItemOut], int]:
+    """Most recent AI-created work items across the caller's projects (source in ai_chat/mcp).
+    Not assignee-filtered — scope is the caller's accessible projects."""
+    if project_ids is not None and not project_ids:
+        return [], 0
+    base = select(WorkItem).where(
+        WorkItem.tenant_id == actor.tenant_id,
+        WorkItem.deleted_at.is_(None),
+        WorkItem.source.in_(_AI_SOURCES),
+    )
+    if project_ids is not None:
+        base = base.where(WorkItem.project_id.in_(project_ids))
+    total = (await db.execute(select(func.count()).select_from(base.subquery()))).scalar_one()
+    items = (await db.execute(base.order_by(WorkItem.created_at.desc()).limit(limit))).scalars().all()
+    return await _build_work_item_outs(db, list(items)), total
