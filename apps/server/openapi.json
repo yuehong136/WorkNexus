@@ -171,6 +171,45 @@
             }
           }
         }
+      },
+      "patch": {
+        "tags": [
+          "identity"
+        ],
+        "summary": "Update Me",
+        "operationId": "update_me",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProfileUpdateIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Envelope_CurrentUserContext_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/api/v1/users": {
@@ -2857,6 +2896,234 @@
           }
         }
       }
+    },
+    "/api/v1/audit-logs": {
+      "get": {
+        "tags": [
+          "audit"
+        ],
+        "summary": "List Audit Logs",
+        "operationId": "list_audit_logs",
+        "parameters": [
+          {
+            "name": "actor_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/AuditActorType"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Actor Type"
+            }
+          },
+          {
+            "name": "actor_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Actor Id"
+            }
+          },
+          {
+            "name": "resource_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Resource Type"
+            }
+          },
+          {
+            "name": "resource_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Resource Id"
+            }
+          },
+          {
+            "name": "project_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "action",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/AuditAction"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Action"
+            }
+          },
+          {
+            "name": "created_from",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Created From"
+            }
+          },
+          {
+            "name": "created_to",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Created To"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 20,
+              "title": "Page Size"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Envelope_Page_AuditLogOut__"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/home": {
+      "get": {
+        "tags": [
+          "home"
+        ],
+        "summary": "Get Home",
+        "operationId": "get_home",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Envelope_HomeSnapshotOut_"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/settings/ai-connection": {
+      "get": {
+        "tags": [
+          "settings"
+        ],
+        "summary": "Get Ai Connection",
+        "operationId": "get_ai_connection",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Envelope_AiConnectionOut_"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -3283,6 +3550,278 @@
         ],
         "title": "AgentStatus"
       },
+      "AiConnectionOut": {
+        "properties": {
+          "aiClient": {
+            "type": "string",
+            "title": "Aiclient"
+          },
+          "aiPlatformBaseUrl": {
+            "type": "string",
+            "title": "Aiplatformbaseurl"
+          },
+          "aiPlatformDefaultAgentId": {
+            "type": "string",
+            "title": "Aiplatformdefaultagentid"
+          },
+          "aiPlatformTimeoutSeconds": {
+            "type": "number",
+            "title": "Aiplatformtimeoutseconds"
+          },
+          "apiKeyConfigured": {
+            "type": "boolean",
+            "title": "Apikeyconfigured"
+          },
+          "apiKeyMasked": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Apikeymasked"
+          },
+          "intakeTriageProvider": {
+            "type": "string",
+            "title": "Intaketriageprovider"
+          },
+          "dashboardInsightsProvider": {
+            "type": "string",
+            "title": "Dashboardinsightsprovider"
+          }
+        },
+        "type": "object",
+        "required": [
+          "aiClient",
+          "aiPlatformBaseUrl",
+          "aiPlatformDefaultAgentId",
+          "aiPlatformTimeoutSeconds",
+          "apiKeyConfigured",
+          "apiKeyMasked",
+          "intakeTriageProvider",
+          "dashboardInsightsProvider"
+        ],
+        "title": "AiConnectionOut",
+        "description": "Masked, read-only view of the multirag connection (.env-driven, D7). The API token is\nNEVER returned in plaintext — only whether it is configured and a masked tail."
+      },
+      "AuditAction": {
+        "type": "string",
+        "enum": [
+          "setup.complete",
+          "auth.login",
+          "auth.logout",
+          "invite.create",
+          "invite.revoke",
+          "invite.accept",
+          "role_binding.create",
+          "role_binding.delete",
+          "project.create",
+          "project.update",
+          "project.archive",
+          "project.member.add",
+          "project.member.update",
+          "project.member.remove",
+          "work_item.create",
+          "work_item.update",
+          "work_item.delete",
+          "work_item.transition",
+          "work_item.comment",
+          "work_item.relation.add",
+          "work_item.relation.remove",
+          "skill.invoke",
+          "ai.proposed_action.create",
+          "agent_action.approve",
+          "agent_action.reject",
+          "agent_action.execute",
+          "intake.create",
+          "intake.update",
+          "intake.accept",
+          "intake.reject",
+          "intake.duplicate",
+          "intake.snooze",
+          "user.profile.update"
+        ],
+        "title": "AuditAction"
+      },
+      "AuditActorOut": {
+        "properties": {
+          "type": {
+            "$ref": "#/components/schemas/AuditActorType"
+          },
+          "id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          },
+          "displayName": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Displayname"
+          }
+        },
+        "type": "object",
+        "required": [
+          "type",
+          "id",
+          "displayName"
+        ],
+        "title": "AuditActorOut"
+      },
+      "AuditActorType": {
+        "type": "string",
+        "enum": [
+          "user",
+          "ai_agent",
+          "system"
+        ],
+        "title": "AuditActorType"
+      },
+      "AuditLogOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Createdat"
+          },
+          "actor": {
+            "$ref": "#/components/schemas/AuditActorOut"
+          },
+          "action": {
+            "type": "string",
+            "title": "Action"
+          },
+          "resourceType": {
+            "type": "string",
+            "title": "Resourcetype"
+          },
+          "resourceId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resourceid"
+          },
+          "projectId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Projectid"
+          },
+          "projectName": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Projectname"
+          },
+          "before": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Before"
+          },
+          "after": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "After"
+          },
+          "detail": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Detail"
+          },
+          "requestId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Requestid"
+          },
+          "ipAddress": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ipaddress"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "createdAt",
+          "actor",
+          "action",
+          "resourceType",
+          "resourceId",
+          "projectId",
+          "projectName",
+          "before",
+          "after",
+          "detail",
+          "requestId",
+          "ipAddress"
+        ],
+        "title": "AuditLogOut"
+      },
       "CommentAuthorType": {
         "type": "string",
         "enum": [
@@ -3705,6 +4244,32 @@
         "type": "object",
         "title": "Envelope[AgentActionOut]"
       },
+      "Envelope_AiConnectionOut_": {
+        "properties": {
+          "code": {
+            "type": "integer",
+            "title": "Code",
+            "default": 0
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "default": "ok"
+          },
+          "data": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AiConnectionOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "title": "Envelope[AiConnectionOut]"
+      },
       "Envelope_CommentOut_": {
         "properties": {
           "code": {
@@ -3834,6 +4399,32 @@
         },
         "type": "object",
         "title": "Envelope[DashboardWorkloadOut]"
+      },
+      "Envelope_HomeSnapshotOut_": {
+        "properties": {
+          "code": {
+            "type": "integer",
+            "title": "Code",
+            "default": 0
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "default": "ok"
+          },
+          "data": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/HomeSnapshotOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "title": "Envelope[HomeSnapshotOut]"
       },
       "Envelope_IntakeOut_": {
         "properties": {
@@ -4010,6 +4601,32 @@
         },
         "type": "object",
         "title": "Envelope[Page[AgentActionOut]]"
+      },
+      "Envelope_Page_AuditLogOut__": {
+        "properties": {
+          "code": {
+            "type": "integer",
+            "title": "Code",
+            "default": 0
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "default": "ok"
+          },
+          "data": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Page_AuditLogOut_"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "title": "Envelope[Page[AuditLogOut]]"
       },
       "Envelope_Page_DashboardOverdueItemOut__": {
         "properties": {
@@ -4623,6 +5240,118 @@
         },
         "type": "object",
         "title": "HTTPValidationError"
+      },
+      "HomeCardOut_AgentActionOut_": {
+        "properties": {
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/AgentActionOut"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total",
+          "items"
+        ],
+        "title": "HomeCardOut[AgentActionOut]"
+      },
+      "HomeCardOut_IntakeOut_": {
+        "properties": {
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/IntakeOut"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total",
+          "items"
+        ],
+        "title": "HomeCardOut[IntakeOut]"
+      },
+      "HomeCardOut_OverdueWorkItem_": {
+        "properties": {
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/OverdueWorkItem"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total",
+          "items"
+        ],
+        "title": "HomeCardOut[OverdueWorkItem]"
+      },
+      "HomeCardOut_WorkItemOut_": {
+        "properties": {
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/WorkItemOut"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total",
+          "items"
+        ],
+        "title": "HomeCardOut[WorkItemOut]"
+      },
+      "HomeSnapshotOut": {
+        "properties": {
+          "myTodos": {
+            "$ref": "#/components/schemas/HomeCardOut_WorkItemOut_"
+          },
+          "overdue": {
+            "$ref": "#/components/schemas/HomeCardOut_OverdueWorkItem_"
+          },
+          "pendingAgentActions": {
+            "$ref": "#/components/schemas/HomeCardOut_AgentActionOut_"
+          },
+          "recentAiCreated": {
+            "$ref": "#/components/schemas/HomeCardOut_WorkItemOut_"
+          },
+          "pendingIntake": {
+            "$ref": "#/components/schemas/HomeCardOut_IntakeOut_"
+          }
+        },
+        "type": "object",
+        "required": [
+          "myTodos",
+          "overdue",
+          "pendingAgentActions",
+          "recentAiCreated",
+          "pendingIntake"
+        ],
+        "title": "HomeSnapshotOut"
       },
       "IdentityProvider": {
         "type": "string",
@@ -5469,6 +6198,85 @@
         ],
         "title": "MessageRole"
       },
+      "OverdueWorkItem": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "status": {
+            "$ref": "#/components/schemas/WorkItemStatus"
+          },
+          "type": {
+            "$ref": "#/components/schemas/WorkItemType"
+          },
+          "priority": {
+            "$ref": "#/components/schemas/WorkItemPriority"
+          },
+          "assignee_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assignee Id"
+          },
+          "assignee": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/UserBriefOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "due_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Due At"
+          },
+          "days_overdue": {
+            "type": "integer",
+            "title": "Days Overdue"
+          },
+          "source": {
+            "$ref": "#/components/schemas/WorkItemSource"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "key",
+          "title",
+          "status",
+          "type",
+          "priority",
+          "assignee_id",
+          "assignee",
+          "due_at",
+          "days_overdue",
+          "source",
+          "created_at"
+        ],
+        "title": "OverdueWorkItem"
+      },
       "Page_AgentActionOut_": {
         "properties": {
           "items": {
@@ -5499,6 +6307,37 @@
           "pageSize"
         ],
         "title": "Page[AgentActionOut]"
+      },
+      "Page_AuditLogOut_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/AuditLogOut"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "page": {
+            "type": "integer",
+            "title": "Page"
+          },
+          "pageSize": {
+            "type": "integer",
+            "title": "Pagesize"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total",
+          "page",
+          "pageSize"
+        ],
+        "title": "Page[AuditLogOut]"
       },
       "Page_DashboardOverdueItemOut_": {
         "properties": {
@@ -5781,6 +6620,22 @@
           "dashboard.read"
         ],
         "title": "Permission"
+      },
+      "ProfileUpdateIn": {
+        "properties": {
+          "displayName": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Displayname"
+          }
+        },
+        "type": "object",
+        "required": [
+          "displayName"
+        ],
+        "title": "ProfileUpdateIn",
+        "description": "Settings Lite: the only self-editable profile field in v0.1 (password/avatar deferred)."
       },
       "ProjectAccessOut": {
         "properties": {
