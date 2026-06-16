@@ -11,5 +11,6 @@ export const paths = {
   dashboard: (projectId: string) => `/projects/${projectId}/dashboard`,
   ai: (projectId: string) => `/projects/${projectId}/ai`,
   skills: () => '/skills',
+  audit: () => '/audit',
   settingsMembers: () => '/settings/members',
 } as const

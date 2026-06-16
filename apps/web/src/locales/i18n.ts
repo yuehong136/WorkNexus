@@ -3,7 +3,7 @@ import { initReactI18next } from 'react-i18next'
 
 /** t() signature covering every namespace — for helpers that take t as a parameter. */
 export type AppTFunction = TFunction<
-  ['common', 'auth', 'settings', 'projects', 'workItems', 'intake', 'dashboard', 'skills', 'workchat']
+  ['common', 'auth', 'settings', 'projects', 'workItems', 'intake', 'dashboard', 'skills', 'workchat', 'audit']
 >
 
 import { DEFAULT_LOCALE, localeRegistry, type ProductLocale } from './locale-registry'

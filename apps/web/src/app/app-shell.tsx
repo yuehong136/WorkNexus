@@ -81,6 +81,11 @@ export function AppShell() {
               {t('nav.skills')}
             </NavLink>
           </PermissionGate>
+          <PermissionGate permission="audit.read">
+            <NavLink to={paths.audit()} className={navLinkClassName}>
+              {t('nav.audit')}
+            </NavLink>
+          </PermissionGate>
           <PermissionGate permission="user.read">
             <NavLink to={paths.settingsMembers()} className={navLinkClassName}>
               {t('nav.members')}

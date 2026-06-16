@@ -103,6 +103,13 @@ export const router = createBrowserRouter([
             },
           },
           {
+            path: paths.audit(),
+            lazy: async () => {
+              const { AuditPage } = await import('@/features/audit/routes/audit-page')
+              return { Component: AuditPage }
+            },
+          },
+          {
             path: paths.settingsMembers(),
             lazy: async () => {
               const { MembersPage } = await import('@/features/settings/routes/members-page')
