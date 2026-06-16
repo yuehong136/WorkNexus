@@ -75,7 +75,7 @@ async def test_snapshot_aggregates_all_cards(db: AsyncSession, initialized: Simp
     snap = await service.get_home_snapshot(db, await load_subject(db, actor))
 
     assert snap.my_todos.total == 2 and len(snap.my_todos.items) == 2
-    assert snap.overdue.total == 1 and snap.overdue.items[0].days_overdue >= 1
+    assert snap.overdue.total == 1 and snap.overdue.items[0].due_at is not None
     assert snap.recent_ai_created.total == 1 and snap.recent_ai_created.items[0].source == WorkItemSource.AI_CHAT
     assert snap.pending_agent_actions.total == 1
     assert snap.pending_intake.total == 1

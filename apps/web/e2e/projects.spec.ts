@@ -36,6 +36,7 @@ test('create a project and manage its members', async ({ page, browser }) => {
 
   // A second user must exist before they can be added to a project: invite one
   // to the seed project, then activate the account in a fresh session.
+  await page.getByRole('link', { name: '设置' }).click()
   await page.getByRole('link', { name: '成员' }).click()
   await page.getByRole('button', { name: '邀请成员' }).click()
   await page.getByLabel('邮箱').fill(member.email)
@@ -53,8 +54,8 @@ test('create a project and manage its members', async ({ page, browser }) => {
   await expect(inviteePage.getByRole('button', { name: new RegExp(member.displayName) })).toBeVisible()
   await inviteeContext.close()
 
-  // Create a project from the projects list.
-  await page.getByRole('link', { name: '项目' }).click()
+  // Create a project from the projects list (exact: the settings sub-nav also has a 我的项目 link).
+  await page.getByRole('link', { name: '项目', exact: true }).click()
   await expect(page).toHaveURL(/\/projects$/)
   await page.getByRole('button', { name: '创建项目' }).click()
   await page.getByLabel('名称').fill('E2E Project')

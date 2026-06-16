@@ -57,7 +57,7 @@ export default {
   title: 'Settings',
   nav: {
     profile: 'Profile',
-    projects: 'Projects',
+    projects: 'My projects',
     ai: 'AI connection',
     skills: 'Skills',
     members: 'Members',

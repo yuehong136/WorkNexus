@@ -1,6 +1,7 @@
 import type audit from './zh-CN/audit'
 import type auth from './zh-CN/auth'
 import type common from './zh-CN/common'
+import type home from './zh-CN/home'
 import type dashboard from './zh-CN/dashboard'
 import type intake from './zh-CN/intake'
 import type projects from './zh-CN/projects'
@@ -23,6 +24,7 @@ declare module 'i18next' {
       skills: typeof skills
       workchat: typeof workchat
       audit: typeof audit
+      home: typeof home
     }
   }
 }

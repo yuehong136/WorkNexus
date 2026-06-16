@@ -1,6 +1,6 @@
 from worknexus.core.schemas import ApiModel
 from worknexus.modules.intake.schemas import IntakeOut
-from worknexus.modules.work_items.schemas import OverdueWorkItem, WorkItemOut
+from worknexus.modules.work_items.schemas import WorkItemOut
 from worknexus.modules.workchat.schemas import AgentActionOut
 
 
@@ -14,7 +14,7 @@ class HomeCardOut[T](ApiModel):
 
 class HomeSnapshotOut(ApiModel):
     my_todos: HomeCardOut[WorkItemOut]
-    overdue: HomeCardOut[OverdueWorkItem]
+    overdue: HomeCardOut[WorkItemOut]
     pending_agent_actions: HomeCardOut[AgentActionOut]
     recent_ai_created: HomeCardOut[WorkItemOut]
     pending_intake: HomeCardOut[IntakeOut]
