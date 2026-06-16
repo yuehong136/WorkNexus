@@ -5,13 +5,12 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { HomeCardOutWorkItemOut } from './homeCardOutWorkItemOut';
-import type { HomeCardOutOverdueWorkItem } from './homeCardOutOverdueWorkItem';
 import type { HomeCardOutAgentActionOut } from './homeCardOutAgentActionOut';
 import type { HomeCardOutIntakeOut } from './homeCardOutIntakeOut';
 
 export interface HomeSnapshotOut {
   myTodos: HomeCardOutWorkItemOut;
-  overdue: HomeCardOutOverdueWorkItem;
+  overdue: HomeCardOutWorkItemOut;
   pendingAgentActions: HomeCardOutAgentActionOut;
   recentAiCreated: HomeCardOutWorkItemOut;
   pendingIntake: HomeCardOutIntakeOut;

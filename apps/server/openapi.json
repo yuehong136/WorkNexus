@@ -5283,27 +5283,6 @@
         ],
         "title": "HomeCardOut[IntakeOut]"
       },
-      "HomeCardOut_OverdueWorkItem_": {
-        "properties": {
-          "total": {
-            "type": "integer",
-            "title": "Total"
-          },
-          "items": {
-            "items": {
-              "$ref": "#/components/schemas/OverdueWorkItem"
-            },
-            "type": "array",
-            "title": "Items"
-          }
-        },
-        "type": "object",
-        "required": [
-          "total",
-          "items"
-        ],
-        "title": "HomeCardOut[OverdueWorkItem]"
-      },
       "HomeCardOut_WorkItemOut_": {
         "properties": {
           "total": {
@@ -5331,7 +5310,7 @@
             "$ref": "#/components/schemas/HomeCardOut_WorkItemOut_"
           },
           "overdue": {
-            "$ref": "#/components/schemas/HomeCardOut_OverdueWorkItem_"
+            "$ref": "#/components/schemas/HomeCardOut_WorkItemOut_"
           },
           "pendingAgentActions": {
             "$ref": "#/components/schemas/HomeCardOut_AgentActionOut_"
@@ -6197,85 +6176,6 @@
           "system"
         ],
         "title": "MessageRole"
-      },
-      "OverdueWorkItem": {
-        "properties": {
-          "id": {
-            "type": "string",
-            "title": "Id"
-          },
-          "key": {
-            "type": "string",
-            "title": "Key"
-          },
-          "title": {
-            "type": "string",
-            "title": "Title"
-          },
-          "status": {
-            "$ref": "#/components/schemas/WorkItemStatus"
-          },
-          "type": {
-            "$ref": "#/components/schemas/WorkItemType"
-          },
-          "priority": {
-            "$ref": "#/components/schemas/WorkItemPriority"
-          },
-          "assignee_id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Assignee Id"
-          },
-          "assignee": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/UserBriefOut"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "due_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Due At"
-          },
-          "days_overdue": {
-            "type": "integer",
-            "title": "Days Overdue"
-          },
-          "source": {
-            "$ref": "#/components/schemas/WorkItemSource"
-          },
-          "created_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Created At"
-          }
-        },
-        "type": "object",
-        "required": [
-          "id",
-          "key",
-          "title",
-          "status",
-          "type",
-          "priority",
-          "assignee_id",
-          "assignee",
-          "due_at",
-          "days_overdue",
-          "source",
-          "created_at"
-        ],
-        "title": "OverdueWorkItem"
       },
       "Page_AgentActionOut_": {
         "properties": {
