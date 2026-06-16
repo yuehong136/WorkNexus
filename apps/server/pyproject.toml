@@ -2,6 +2,7 @@
 name = "worknexus"
 version = "0.1.0"
 description = "WorkNexus server: REST API (/api/v1) + MCP (/mcp) on a modular monolith"
+license = "Apache-2.0"
 authors = [
     { name = "yuehong136", email = "1365590480@qq.com" }
 ]

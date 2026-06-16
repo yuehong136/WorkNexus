@@ -2,7 +2,8 @@
   "name": "worknexus",
   "version": "0.1.0",
   "private": true,
-  "description": "WorkNexus\uff08\u667a\u534f\u4e2d\u67a2\uff09\uff1aAI-native \u56e2\u961f\u534f\u4f5c\u4e0e\u5de5\u5355 WorkOS",
+  "license": "Apache-2.0",
+  "description": "WorkNexus（智协中枢）：AI-native 团队协作与工单 WorkOS",
   "workspaces": [
     "apps/web",
     "packages/*"
