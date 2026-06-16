@@ -40,6 +40,7 @@ test('setup, logout, login and invite main path', async ({ page, browser }) => {
   await expect(userMenu).toBeVisible()
 
   // Invite a member from the members page and copy the link.
+  await page.getByRole('link', { name: '设置' }).click()
   await page.getByRole('link', { name: '成员' }).click()
   await page.getByRole('button', { name: '邀请成员' }).click()
   await page.getByLabel('邮箱').fill(member.email)

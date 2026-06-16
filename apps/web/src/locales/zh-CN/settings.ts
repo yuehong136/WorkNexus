@@ -55,7 +55,7 @@ export default {
   title: '设置',
   nav: {
     profile: '个人资料',
-    projects: '项目',
+    projects: '我的项目',
     ai: 'AI 连接',
     skills: 'Skills',
     members: '成员',
