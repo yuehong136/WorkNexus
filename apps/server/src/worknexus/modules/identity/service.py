@@ -45,6 +45,7 @@ from worknexus.modules.identity.schemas import (
     InvitePreviewOut,
     InviteStatus,
     IssuedDelegationToken,
+    ProfileUpdateIn,
     ProjectAccessOut,
     SetupIn,
     TenantOut,
@@ -234,6 +235,25 @@ async def get_user(db: AsyncSession, user_id: str) -> User:
     if user is None:
         raise BizError(ErrorCode.NOT_FOUND, "user not found")
     return user
+
+
+async def update_profile(db: AsyncSession, actor: Actor, data: ProfileUpdateIn) -> CurrentUserContext:
+    """Settings Lite: the caller updates their own display name (the only writable field
+    in v0.1). Audited; password/avatar are deferred to a later security PR."""
+    user = await get_user(db, actor.id)
+    before = {"displayName": user.display_name}
+    user.display_name = data.display_name
+    await audit.record(
+        db,
+        actor,
+        action=AuditAction.USER_PROFILE_UPDATE,
+        resource_type="user",
+        resource_id=user.id,
+        before=before,
+        after={"displayName": user.display_name},
+    )
+    await db.commit()
+    return await build_current_user_context(db, user)
 
 
 async def build_current_user_context(db: AsyncSession, user: User) -> CurrentUserContext:

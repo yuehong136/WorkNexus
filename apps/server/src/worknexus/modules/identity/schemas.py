@@ -2,7 +2,7 @@ from datetime import datetime
 from enum import StrEnum
 from typing import Any
 
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 
 from worknexus.core.access import Permission, Role
 from worknexus.core.schemas import ApiModel
@@ -46,6 +46,12 @@ class SetupIn(ApiModel):
 class LoginIn(ApiModel):
     email: EmailStr
     password: str
+
+
+class ProfileUpdateIn(ApiModel):
+    """Settings Lite: the only self-editable profile field in v0.1 (password/avatar deferred)."""
+
+    display_name: str = Field(min_length=1, max_length=100)
 
 
 class UserOut(ApiModel):
