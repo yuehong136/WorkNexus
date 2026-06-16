@@ -86,11 +86,9 @@ export function AppShell() {
               {t('nav.audit')}
             </NavLink>
           </PermissionGate>
-          <PermissionGate permission="user.read">
-            <NavLink to={paths.settingsMembers()} className={navLinkClassName}>
-              {t('nav.members')}
-            </NavLink>
-          </PermissionGate>
+          <NavLink to={paths.settings()} className={navLinkClassName}>
+            {t('nav.settings')}
+          </NavLink>
         </nav>
       </aside>
       <div className="flex flex-1 flex-col">

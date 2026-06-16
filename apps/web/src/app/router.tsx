@@ -1,4 +1,4 @@
-import { createBrowserRouter } from 'react-router'
+import { createBrowserRouter, Navigate } from 'react-router'
 
 import { AppShell } from '@/app/app-shell'
 import { GuestOnly } from '@/features/auth/components/guest-only'
@@ -110,11 +110,49 @@ export const router = createBrowserRouter([
             },
           },
           {
-            path: paths.settingsMembers(),
+            path: paths.settings(),
             lazy: async () => {
-              const { MembersPage } = await import('@/features/settings/routes/members-page')
-              return { Component: MembersPage }
+              const { SettingsLayout } = await import('@/features/settings/routes/settings-layout')
+              return { Component: SettingsLayout }
             },
+            children: [
+              { index: true, element: <Navigate to={paths.settingsProfile()} replace /> },
+              {
+                path: paths.settingsProfile(),
+                lazy: async () => {
+                  const { ProfilePage } = await import('@/features/settings/routes/profile-page')
+                  return { Component: ProfilePage }
+                },
+              },
+              {
+                path: paths.settingsProjects(),
+                lazy: async () => {
+                  const { ProjectsSettingsPage } = await import('@/features/settings/routes/projects-settings-page')
+                  return { Component: ProjectsSettingsPage }
+                },
+              },
+              {
+                path: paths.settingsAi(),
+                lazy: async () => {
+                  const { AiConnectionPage } = await import('@/features/settings/routes/ai-connection-page')
+                  return { Component: AiConnectionPage }
+                },
+              },
+              {
+                path: paths.settingsSkills(),
+                lazy: async () => {
+                  const { SkillsSettingsPage } = await import('@/features/settings/routes/skills-settings-page')
+                  return { Component: SkillsSettingsPage }
+                },
+              },
+              {
+                path: paths.settingsMembers(),
+                lazy: async () => {
+                  const { MembersPage } = await import('@/features/settings/routes/members-page')
+                  return { Component: MembersPage }
+                },
+              },
+            ],
           },
         ],
       },
